@@ -1,8 +1,8 @@
 #Decoding the different message types
 #contained within an ADS-B message.
-#Last update: 12/27/2022
+#Last update: 12/28/2022
 
-import numpy as np
+#import numpy as np
 
 #This function decodes the aircraft identification message,
 #which contains the Aircraft Category and the Tail-number.
@@ -59,12 +59,39 @@ def decode_air_pos(msg1_in, msg2_in, TC_in, ICAO1, ICAO2):
     indices = [0, 2, 3, 15, 16, 17, 34, 51]
     parts1 = [msg1_in[i:j] for i,j in zip(indices, indices[1:])]
     parts2 = [msg2_in[i:j] for i,j in zip(indices, indices[1:])]
+    print(parts2)
 
     SS = int(parts1[0], 2)
     if SS == 0: print('Surveillance Status: No Condition')
     if SS == 1: print('Surveillance Status: Permanent Alert')
     if SS == 2: print('Surveillance Status: Temporary Alert')
     if SS == 3: print('Surveillance Status: SPI Condition')
+
+    if TC >= 9 or TC <= 18:
+        indices = [0, 7, 8, 12]
+        parts_alt = [parts2[2][i:j] for i,j in zip(indices, indices[1:])]
+        if parts_alt[1] == '1':
+            alt_msg_bin = parts_alt[0] + parts_alt[2]
+            alt_msg_dec = int(alt_msg_bin, 2)
+            alt = (alt_msg_dec * 25) - 1000
+            print('Aircraft Altitude (Barometric): ', alt)
+        if parts_alt[1] == '0':                             ##############################
+            alt_msg_gray = parts_alt[0] + parts_alt[2]      ##
+            alt_msg_bin = gray_to_bin(alt_msg_gray)         ##Check this later I don't
+            alt_msg_dec = int(alt_msg_bin, 2)               ##think it's right, it's hard
+            alt = (alt_msg_dec * 100) - 1000                ##to find info on this.
+            print('Aircraft Altitude (Barometric): ', alt)  ##############################
+
+def gray_to_bin(gray_in):
+    print(gray_in)
+    bin_out = ''
+    bin_out += gray_in[0]
+    for i in range(len(gray_in)-1):  
+        if gray_in[i+1] != bin_out[i]:
+            bin_out += '1'
+        if gray_in[i+1] == bin_out[i]:
+            bin_out += '0'
+    return bin_out
 
 # --- Main Program ---
 msg_iden_bin = '000001011001100001101110001110000110010110011100000'
