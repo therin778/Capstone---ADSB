@@ -2,11 +2,14 @@
 #contained within an ADS-B message.
 #Last update: 12/28/2022
 
+#Libraries
+import math
 
-#This function decodes the aircraft identification message,
-#which contains the Aircraft Category and the Tail-number.
+
+###########################################################
+#This function decodes the aircraft identification message#
+###########################################################
 def decode_iden(msg_in, TC_in):
-
     #Dividing the message data. The first 3 bits are Aircraft Category. The rest
     #of the message is the tail number, each character consisting of 6 bits 
     TC = int(TC_in, 2)
@@ -49,43 +52,111 @@ def decode_iden(msg_in, TC_in):
         if int(parts[i + 1], 2) >= 48 and int(parts[i + 1], 2) <= 57: tail_number += chr(int(parts[i + 1], 2))
                
     print('Tail-Number: ', tail_number)
+##############################################################################################################
 
+
+#####################################################
+#This function decodes the airborne position message#
+#####################################################
 def decode_air_pos(msg1_in, msg2_in, TC_in, ICAO1, ICAO2):
-    if ICAO1 != ICAO2:
+    if ICAO1 != ICAO2:  #Error if the 2 messages are from different aircraft
+        print('ERROR')
         return
     
+    #Dividing the message data. Message structure: surveillance status (2 bits), single antenna flag (1),
+    #altitude (12), time (1), even/odd (1), latitude (12), longitude (12).
     TC = int(TC_in, 2)
     indices = [0, 2, 3, 15, 16, 17, 34, 51]
     parts1 = [msg1_in[i:j] for i,j in zip(indices, indices[1:])]
     parts2 = [msg2_in[i:j] for i,j in zip(indices, indices[1:])]
 
-    SS = int(parts1[0], 2)
-    if SS == 0: print('Surveillance Status: No Condition')
-    if SS == 1: print('Surveillance Status: Permanent Alert')
-    if SS == 2: print('Surveillance Status: Temporary Alert')
-    if SS == 3: print('Surveillance Status: SPI Condition')
+    #Surveillance status, 4 statuses corresponding to 0-3
+    if parts1[0] == '00': print('Surveillance Status: No Condition')
+    if parts1[0] == '01': print('Surveillance Status: Permanent Alert')
+    if parts1[0] == '10': print('Surveillance Status: Temporary Alert')
+    if parts1[0] == '11': print('Surveillance Status: SPI Condition')
 
-    if TC >= 9 and TC <= 18:
+    #Assigning even/odd to the 2 messages, according to the even/odd bit
+    if parts1[4] == '0':
+        if parts2[4] == '0':    #Error if both messages are even
+            print('ERROR')
+            return
+        parts_even = parts1
+        parts_odd = parts2
+    
+    if parts1[4] == '1':
+        if parts2[4] == '1':    #Error if both messages are odd
+            print('ERROR')
+            return
+        parts_odd = parts1
+        parts_even = parts2
+    
+    #Calculating latitude
+    Nz = 15     #Nz = 15 for Mode S
+    d_lat_even = 360 / (4 * Nz)
+    d_lat_odd = 360 / (4 * Nz -1)
+    lat_cpr_even = int(parts_even[5], 2) / (2 ** 17)
+    lat_cpr_odd = int(parts_odd[5], 2) / (2 ** 17)
+    lat_index = math.floor((59 * lat_cpr_even) - (60 * lat_cpr_odd) + 0.5)
+
+    if parts_even[4] == '1':
+        lat = d_lat_even * ((lat_index % 60) + lat_cpr_even)
+        print('Aircraft Latitude: ', lat)
+    if parts_even[4] == '0' and parts_odd[4] == 0:
+       lat = d_lat_even * ((lat_index % 60) + lat_cpr_even)
+       print('Aircraft Latitude: ', lat)
+    if parts_even[4] == '0' and parts_odd[4] == '1':
+       lat = d_lat_odd * ((lat_index % 59) + lat_cpr_odd)
+       print('Aircraft Latitude: ', lat)  
+
+    #Calculating longitude
+    NL = math.floor(2 * math.pi / (math.acos(1 - (1 - math.cos(math.pi / (2 * Nz))) / (math.cos((math.pi * lat) / 180) ** 2))))
+    n_even = max(NL, 1)
+    n_odd = max(NL - 1, 1)
+    d_long_even = 360 / n_even
+    d_long_odd = 360 / n_odd
+    long_cpr_even = int(parts_even[6], 2) / (2 ** 17)
+    long_cpr_odd = int(parts_odd[6], 2) / (2 ** 17)
+    long_index = math.floor((long_cpr_even * (NL - 1)) - (long_cpr_odd * NL) + 0.5)
+
+    if parts_even[4] == '1':
+        long = d_long_even * ((long_index % n_even) + long_cpr_even)
+    if parts_even[4] == '0' and parts_odd == '0':
+        long = d_long_even * ((long_index % n_even) + long_cpr_even)
+    if parts_even[4] == '0' and parts_odd[4] == '1':
+        long = d_long_odd * ((long_index % n_odd) + long_cpr_odd)
+    if long >= 180:
+        long -= 360
+    print('Aircraft Longitude: ', long)
+    
+    #Calculating altitude
+    if TC >= 9 and TC <= 18:    #Type code 9-18 indicates barometric altitude (given in feet)
+        #Dividing the altitude message. Bit 8 is the "Q bit", the rest of the message is the altitude data
         indices = [0, 7, 8, 12]
         parts_alt = [parts2[2][i:j] for i,j in zip(indices, indices[1:])]
-        if parts_alt[1] == '1':
+
+        if parts_alt[1] == '1':     #A "1" as the Q bit indicates altitude in 25 foot increments
             alt_msg_bin = parts_alt[0] + parts_alt[2]
             alt_msg_dec = int(alt_msg_bin, 2)
             alt = (alt_msg_dec * 25) - 1000
             print('Aircraft Altitude (Barometric): ', alt)
-        if parts_alt[1] == '0':                             ##############################
-            alt_msg_gray = parts_alt[0] + parts_alt[2]      ##
+        if parts_alt[1] == '0':     #A "0" as the Q bit indicates altitude in 100 foot increments                            
+            alt_msg_gray = parts_alt[0] + parts_alt[2]      ##############################
             alt_msg_bin = gray_to_bin(alt_msg_gray)         ##Check this later I don't
             alt_msg_dec = int(alt_msg_bin, 2)               ##think it's right, it's hard
             alt = (alt_msg_dec * 100) - 1000                ##to find info on this.
             print('Aircraft Altitude (Barometric): ', alt)  ##############################
-    if TC == 20 or TC == 21 or TC == 22:
+
+    if TC == 20 or TC == 21 or TC == 22:    #Type code 20-22 indicates GNSS altitude (given in meters)
         alt = int(parts2[2], 2)
         print('Aircraft Altitude (GNSS): ', alt)
+##############################################################################################################
 
 
+########################################################
+#This function converts Gray Code to traditional binary#
+########################################################
 def gray_to_bin(gray_in):
-    print(gray_in)
     bin_out = ''
     bin_out += gray_in[0]
     for i in range(len(gray_in)-1):  
@@ -94,8 +165,12 @@ def gray_to_bin(gray_in):
         if gray_in[i+1] == bin_out[i]:
             bin_out += '0'
     return bin_out
+##############################################################################################################
 
-# --- Main Program ---
+
+################################################################################
+#Main Program, ADS-B messages used are from the examples on https://mode-s.org/#
+################################################################################
 msg_iden_bin = '000001011001100001101110001110000110010110011100000'
 type_code_iden = '100'
 
