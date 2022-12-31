@@ -1,0 +1,212 @@
+options:
+  parameters:
+    author: ''
+    catch_exceptions: 'True'
+    category: '[GRC Hier Blocks]'
+    cmake_opt: ''
+    comment: ''
+    copyright: ''
+    description: ''
+    gen_cmake: 'On'
+    gen_linking: dynamic
+    generate_options: qt_gui
+    hier_block_src_path: '.:'
+    id: sdr_test_FFT_GUI
+    max_nouts: '0'
+    output_language: python
+    placement: (0,0)
+    qt_qss_theme: ''
+    realtime_scheduling: ''
+    run: 'True'
+    run_command: '{python} -u {filename}'
+    run_options: prompt
+    sizing_mode: fixed
+    thread_safe_setters: ''
+    title: Not titled yet
+    window_size: (1000,1000)
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [8, 8]
+    rotation: 0
+    state: enabled
+
+blocks:
+- name: debug
+  id: variable
+  parameters:
+    comment: 'Set to 1 to enable debugging, which outputs
+
+      extra information to the console and the debug file.'
+    value: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [568, 220.0]
+    rotation: 0
+    state: true
+- name: debug_file_loc
+  id: variable
+  parameters:
+    comment: "Before running, change the file source to mode1s_GR.bin\nand the debug_file_loc.\
+      \ The debug file contains a copy of \nthe output of the block."
+    value: '"C:/Users/emssm/OneDrive/bits.txt"'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [192, 228.0]
+    rotation: 0
+    state: true
+- name: samp_rate
+  id: variable
+  parameters:
+    comment: ''
+    value: 2e6
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [208, 132.0]
+    rotation: 0
+    state: enabled
+- name: blocks_file_source_0
+  id: blocks_file_source
+  parameters:
+    affinity: ''
+    alias: ''
+    begin_tag: pmt.PMT_NIL
+    comment: ''
+    file: ''
+    length: '0'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    offset: '0'
+    repeat: 'False'
+    type: complex
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [192, 340.0]
+    rotation: 0
+    state: true
+- name: blocks_null_sink_0
+  id: blocks_null_sink
+  parameters:
+    affinity: ''
+    alias: ''
+    bus_structure_sink: '[[0,],]'
+    comment: ''
+    num_inputs: '1'
+    type: float
+    vlen: '4096'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1064, 372.0]
+    rotation: 0
+    state: true
+- name: blocks_throttle_0
+  id: blocks_throttle
+  parameters:
+    affinity: ''
+    alias: ''
+    comment: ''
+    ignoretag: 'True'
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    samples_per_second: samp_rate
+    type: complex
+    vlen: '1'
+  states:
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [424, 372.0]
+    rotation: 0
+    state: true
+- name: epy_block_1
+  id: epy_block
+  parameters:
+    _source_code: "\"\"\"\nEmbedded Python Blocks:\n\nEach time this file is saved,\
+      \ GRC will instantiate the first class it finds\nto get ports and parameters\
+      \ of your block. The arguments to __init__  will\nbe the parameters. All of\
+      \ them are required to have default values!\n\"\"\"\n\nimport numpy as np\n\
+      from gnuradio import gr\n\n\nclass blk(gr.decim_block):  # other base classes\
+      \ are basic_block, decim_block, interp_block\n    \"Takes in raw samples containing\
+      \ ADS-B data and outputs them\"\n\n    def __init__(self, file_loc = \"\", vector_size\
+      \ = 4096, debug = 0):  # only default arguments here\n        \"\"\"arguments\
+      \ to this function show up as parameters in GRC\"\"\"\n        gr.decim_block.__init__(\n\
+      \            self,\n            name='ADS-B Demodulation',   # will show up\
+      \ in GRC\n            in_sig=[np.complex64],\n            out_sig=[(np.float32,4096)],\n\
+      \            decim = vector_size\n        )\n        self.set_relative_rate(1.0/vector_size)\n\
+      \        self.decimation = vector_size\n        \n        # if an attribute\
+      \ with the same name as a parameter is found,\n        # a callback is registered\
+      \ (properties work, too).\n        self.file_loc = file_loc\n        self.debug\
+      \ = debug\n\n    def work(self, input_items, output_items):\n        threshold\
+      \ = 0.29\n        in0 = np.array(input_items[0][:])\n        in0 = np.abs(in0)\n\
+      \        in0 = np.where(in0 > threshold, 1, 0) # this thresholding solution\
+      \ will need to be replaced later\n        \n\n        in0_str = \"\"\n     \
+      \   \n\n        for i in range(len(in0)):\n            in0_str += (str(int(in0[i])))\
+      \  # converts input into a single long string of bits\n\n        message_loc\
+      \ = in0_str.find(\"1010000101000000\") # searches for the first preamble it\
+      \ can find\n        \n        \n        # This block will only execute if a\
+      \ preamble is found, and if the entire message is located within the data packet\
+      \ that GNURadio sent the block.\n        # This results in a portion of messages\
+      \ being missed altogether. This will need to be improved for our final project.\n\
+      \n\n        output = np.empty(4096)\n        output.fill(-1)\n\n        if(message_loc\
+      \ != -1) & (message_loc + 240 < len(in0_str)): \n            message_start =\
+      \ message_loc + 16  # this is where the actual ADS-B data starts\n         \
+      \   message = np.empty(112)\n\n            for i in range (112):           \
+      \  # ADS-B messages are 112 bits long\n\n                twoBits = in0_str[message_start\
+      \ + i*2] +  in0_str[message_start + i*2 + 1]\n                # each bit of\
+      \ data is represented by two raw binary data bits, so we extract them\n    \
+      \            # and process them two at a time\n                if(twoBits ==\
+      \ \"01\"):\n                    message[i] = 0\n                elif(twoBits\
+      \ == \"10\"):\n                    message[i] = 1\n\n                elif(twoBits\
+      \ == \"11\"):\n                    message[i] = 1\n                elif(twoBits\
+      \ == \"00\"):\n                    message[i] = 0\n                else:\n \
+      \                   message[i] = 0\n                # \"01\" and \"10\" represent\
+      \ valid message data, the rest are error states. Error handling of some sort\
+      \ will need to be added here.\n\n            output[0] = 1\n            output[1:113]\
+      \ = message\n            output[114] = 2\n\n        \n        else:\n      \
+      \      output[0] = 0\n        \n        output_items[0][0] = output\n\n    \
+      \    \n\n        if(self.debug):\n            print(len(in0), message_loc) \
+      \  # prints some data that may be useful, more debugging can be added if needed\n\
+      \            file = open(self.file_loc, \"a\")\n\n            np.set_printoptions(threshold=np.inf,\
+      \ linewidth = 512) \n            file.write(np.array2string(output_items[0][0],\
+      \ None)) # writes the raw data in the output to the debug file\n           \
+      \ file.write(\"\\n\\n\")\n\n            file.close()\n\n        \n     \n\n\
+      \        \n\n\n        return len(output_items[0])\n"
+    affinity: ''
+    alias: ''
+    comment: ''
+    debug: debug
+    file_loc: debug_file_loc
+    maxoutbuf: '0'
+    minoutbuf: '0'
+    vector_size: '4096'
+  states:
+    _io_cache: ('ADS-B Demodulation', 'blk', [('file_loc', "''"), ('vector_size',
+      '4096'), ('debug', '0')], [('0', 'complex', 1)], [('0', 'float', 4096)], 'Takes
+      in raw samples containing ADS-B data and outputs them', ['debug', 'file_loc'])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [680, 356.0]
+    rotation: 0
+    state: true
+
+connections:
+- [blocks_file_source_0, '0', blocks_throttle_0, '0']
+- [blocks_throttle_0, '0', epy_block_1, '0']
+- [epy_block_1, '0', blocks_null_sink_0, '0']
+
+metadata:
+  file_format: 1
+  grc_version: 3.10.2.0
