@@ -58,7 +58,7 @@ def decode_iden(msg_in, TC_in):
 
     ###################################################################################
     #iden_out format: [0] aircraft category, [1] wake vortex category, [2] tail number#
-    ####################################################################################
+    ###################################################################################
 
 ##############################################################################################################
 
@@ -176,7 +176,7 @@ def decode_air_pos(msg1_in, msg2_in, TC_in, ICAO1, ICAO2):
 ####################################################
 def decode_sur_pos(msg1_in, msg2_in, ICAO1, ICAO2):
     ref_lat = 39.212001     #Reference coords are the runway at the OU airport. Example
-    ref_long = -82.229126   #messages may not match since the use a different reference.
+    ref_long = -82.229126   #messages may not match since they use a different reference.
 
     surpos_out = ['GS', 'GT', 'LAT', 'LONG']
     if ICAO1 != ICAO2:  #Error if the 2 messages are from different aircraft
