@@ -12,7 +12,7 @@ options:
     generate_options: qt_gui
     hier_block_src_path: '.:'
     id: sdr_test_FFT_GUI
-    max_nouts: '0'
+    max_nouts: '4096'
     output_language: python
     placement: (0,0)
     qt_qss_theme: ''
@@ -39,7 +39,7 @@ blocks:
     comment: 'Set to 1 to enable debugging, which outputs
 
       extra information to the console and the debug file.'
-    value: '1'
+    value: '0'
   states:
     bus_sink: false
     bus_source: false
@@ -103,12 +103,12 @@ blocks:
     comment: ''
     num_inputs: '1'
     type: float
-    vlen: '4096'
+    vlen: '1'
   states:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1064, 372.0]
+    coordinate: [1120, 376.0]
     rotation: 0
     state: true
 - name: blocks_throttle_0
@@ -128,6 +128,43 @@ blocks:
     bus_source: false
     bus_structure: null
     coordinate: [424, 372.0]
+    rotation: 0
+    state: true
+- name: epy_block_0
+  id: epy_block
+  parameters:
+    _source_code: "\"\"\"\nEmbedded Python Blocks:\n\nEach time this file is saved,\
+      \ GRC will instantiate the first class it finds\nto get ports and parameters\
+      \ of your block. The arguments to __init__  will\nbe the parameters. All of\
+      \ them are required to have default values!\n\"\"\"\n\nimport numpy as np\n\
+      from gnuradio import gr\n\n\nclass blk(gr.sync_block):  # other base classes\
+      \ are basic_block, decim_block, interp_block\n    \"\"\"Embedded Python Block\
+      \ example - a simple multiply const\"\"\"\n\n    def __init__(self):  # only\
+      \ default arguments here\n        \"\"\"arguments to this function show up as\
+      \ parameters in GRC\"\"\"\n        gr.sync_block.__init__(\n            self,\n\
+      \            name='ADS-B Decoding',   # will show up in GRC\n            in_sig=[(np.float32,4096)],\n\
+      \            out_sig=[np.float32]\n        )\n        # if an attribute with\
+      \ the same name as a parameter is found,\n        # a callback is registered\
+      \ (properties work, too).\n        \n\n\n# All actual code goes into this work\
+      \ function, the stuff above is for if you need to change\n# the input/output\
+      \ of the block, or if you want a user-changeable parameter.\n\n    def work(self,\
+      \ input_items, output_items):\n        in0 = input_items[0][0][:] # in0 contains\
+      \ the input as a vector of floats\n        \n        print(len(in0)) # just\
+      \ used to test, feel free to delete this\n\n\n\n\n\n\n        # not used, but\
+      \ don't remove, program doesn't run properly without an output\n        output_items[0][:]\
+      \ = 0\n        return len(output_items[0]) # not used, ignore\n"
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+  states:
+    _io_cache: ('ADS-B Decoding', 'blk', [], [('0', 'float', 4096)], [('0', 'float',
+      1)], 'Embedded Python Block example - a simple multiply const', [])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [920, 376.0]
     rotation: 0
     state: true
 - name: epy_block_1
@@ -205,7 +242,8 @@ blocks:
 connections:
 - [blocks_file_source_0, '0', blocks_throttle_0, '0']
 - [blocks_throttle_0, '0', epy_block_1, '0']
-- [epy_block_1, '0', blocks_null_sink_0, '0']
+- [epy_block_0, '0', blocks_null_sink_0, '0']
+- [epy_block_1, '0', epy_block_0, '0']
 
 metadata:
   file_format: 1
