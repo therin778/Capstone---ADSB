@@ -41,6 +41,9 @@ def getRawBits(sample_block):
 
 # This function takes in the raw ADS-B bitstream (as a string) and returns the output as described in the ICD.
 def getADSBBits(rawBits):
+    while True: # A loop that handles split and multiple messeges per packet
+        counter = 1:
+        
     message_loc = rawBits.find("1010000101000000") # searches for the first preamble it can find
     
     
@@ -55,30 +58,35 @@ def getADSBBits(rawBits):
         message_start = message_loc + 16  # this is where the actual ADS-B data starts
         message = np.empty(112)
 
-        for i in range (112):             # ADS-B messages are 112 bits long
+        loopCount = 5
+        for j in range (loopCount):
+            messageLocation = j*112 + 1
 
-            twoBits = rawBits[message_start + i*2] +  rawBits[message_start + i*2 + 1]
-            # each bit of data is represented by two raw binary data bits, so we extract them
-            # and process them two at a time
-            if(twoBits == "01"):
-                message[i] = 0
-            elif(twoBits == "10"):
-                message[i] = 1
+            for i in range (112):             # ADS-B messages are 112 bits long
 
-            elif(twoBits == "11"):
-                message[i] = 1
-            elif(twoBits == "00"):
-                message[i] = 0
-            else:
-                message[i] = 0
-            # "01" and "10" represent valid message data, the rest are error states. Error handling of some sort will need to be added here.
+                twoBits = rawBits[message_start + i*2] +  rawBits[message_start + i*2 + 1]
+                # each bit of data is represented by two raw binary data bits, so we extract them
+                # and process them two at a time
+                if(twoBits == "01"):
+                    message[i] = 0
+                elif(twoBits == "10"):
+                    message[i] = 1
 
-        output[0] = 1
-        output[1:113] = message
-        output[113] = 2
+                elif(twoBits == "11"):
+                    message[i] = 1
+                elif(twoBits == "00"):
+                    message[i] = 0
+                else:
+                    message[i] = 0
+                # "01" and "10" represent valid message data, the rest are error states. Error handling of some sort will need to be added here.
 
-    else:
-        output[0] = 0
+            counter = counter + 1
+            output[messageLocation+1:113+messageLocation] = message
+            output[messageLocation+113] = 2
+
+        else:
+            output[0] = 0
+            break
     
 
 

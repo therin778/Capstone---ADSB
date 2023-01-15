@@ -45,45 +45,47 @@ class blk(gr.decim_block):  # other base classes are basic_block, decim_block, i
 
         message_loc = in0_str.find("1010000101000000") # searches for the first preamble it can find
         
-        
-        # This block will only execute if a preamble is found, and if the entire message is located within the data packet that GNURadio sent the block.
-        # This results in a portion of messages being missed altogether. This will need to be improved for our final project.
+        # Aloop that handles split messeges and multiple messeges per packet
+        for i in range(10):
+
+            # This block will only execute if a preamble is found, and if the entire message is located within the data packet that GNURadio sent the block.
+            # This results in a portion of messages being missed altogether. This will need to be improved for our final project.
 
 
-        output = np.empty(4096)
-        output.fill(-1)
+            output = np.empty(4096)
+            output.fill(-1)
 
-        if(message_loc != -1) & (message_loc + 240 < len(in0_str)): 
-            message_start = message_loc + 16  # this is where the actual ADS-B data starts
-            message = np.empty(112)
+            if(message_loc != -1) & (message_loc + 240 < len(in0_str)): 
+                message_start = message_loc + 16  # this is where the actual ADS-B data starts
+                message = np.empty(112)
 
-            for i in range (112):             # ADS-B messages are 112 bits long
+                for i in range (112):             # ADS-B messages are 112 bits long
 
                 twoBits = in0_str[message_start + i*2] +  in0_str[message_start + i*2 + 1]
-                # each bit of data is represented by two raw binary data bits, so we extract them
-                # and process them two at a time
-                if(twoBits == "01"):
-                    message[i] = 0
-                elif(twoBits == "10"):
+                    # each bit of data is represented by two raw binary data bits, so we extract them
+                    # and process them two at a time
+                    if(twoBits == "01"):
+                        message[i] = 0
+                    elif(twoBits == "10"):
                     message[i] = 1
 
-                elif(twoBits == "11"):
-                    message[i] = 1
-                elif(twoBits == "00"):
-                    message[i] = 0
+                    elif(twoBits == "11"):
+                        message[i] = 1
+                    elif(twoBits == "00"):
+                        message[i] = 0
+                    else:
+                        message[i] = 0
+                    # "01" and "10" represent valid message data, the rest are error states. Error handling of some sort will need to be added here.
+
+                output[0] = 1
+                output[1:113] = message
+                output[114] = 2
+
+        
                 else:
-                    message[i] = 0
-                # "01" and "10" represent valid message data, the rest are error states. Error handling of some sort will need to be added here.
-
-            output[0] = 1
-            output[1:113] = message
-            output[114] = 2
-
+                    output[0] = 0
         
-        else:
-            output[0] = 0
-        
-        output_items[0][0] = output
+                output_items[0][0] = output
 
         
 
