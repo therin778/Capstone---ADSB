@@ -1,17 +1,19 @@
 #decode single buffer from demod module
 #might eventually include crc correction later? idk
-#Last Update : 12/31/22
+#Last Update : 01/17/23
 
 #different libraries
 import numpy as np
-from Decoding import decode_iden, decode_sur_pos, decode_air_pos, decode_air_velo
+from DF17_decoding_functions import decode_iden, decode_sur_pos, decode_air_pos, decode_air_velo
 import pyModeS as pms
+
 
 
 # --- Function Definitions ---
 
 # --- Decodes DF-17 Message Type ---
-def DF17_decode(msg_in, counter_array, msg_array):
+def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array):
+
 
     #CRC check within each message
     integer_msg = int(msg_in, 2)
@@ -39,6 +41,8 @@ def DF17_decode(msg_in, counter_array, msg_array):
     TC = int(TC_bin, 2)
     msg = parts[4]
 
+    print(TC)
+
     #Do needed message decode based on TC
 
     #Aircraft Ident
@@ -63,26 +67,51 @@ def DF17_decode(msg_in, counter_array, msg_array):
         else: 
             #if other messages exist
             if counter_array[0] == 1:
+
                
                 #check if any same ICAO addresses
                 ICAO_array = msg_array_true[3::3]
+
+                #double check ICAO exists
+                if len(ICAO_array) == 0:
+                    return
+
                 for i in range(len(ICAO_array)):
                     if ICAO_array[i] == ICAO:
+
                         #not sure conds are correct
                         #double checks type code
-                        if msg_array[3*i+2] == 5 or msg_array[3*i+2] == 6 or msg_array[3*i+2] == 7 or msg_array[3*i+2] == 8:
+                        if msg_array_true[3*i+2] == 5 or msg_array_true[3*i+2] == 6 or msg_array_true[3*i+2] == 7 or msg_array_true[3*i+2] == 8:
                             out = decode_sur_pos(msg_array_true[i*3+1], msg, msg_array_true[3*i+3], ICAO)
                             
-                            #deletes older message
-                            del msg_array_true[i*3+1]
-                            del msg_array_true[3*i+1]
-                            del msg_array_true[3*i+1]
-                
-                #adds most recent message for ICAO address/ TC
-                msg_array_true.append(msg)
-                msg_array_true.append(TC)
-                msg_array_true.append(ICAO)
-                counter_array[0] = 0
+                            #if good output delete old message and append new
+                            if out != 'ERROR':
+                                del msg_array_true[i*3+1]
+                                del msg_array_true[3*i+1]
+                                del msg_array_true[3*i+1]
+                                msg_array_true.append(msg)
+                                msg_array_true.append(TC)
+                                msg_array_true.append(ICAO)
+                                counter_array[1] = 0
+
+                            #if good output print to terminal/ text file
+                                if out:
+                                    if out != 'ERROR':
+                                        lines = ['DF: ', str(parts[0]), ' | ICAO: ', str(ICAO), ' | Type Code: ', str(TC), ' | Msg: ', str(out)]
+                                        print(lines)
+                                        with open('output.txt', 'a') as f:
+                                            for line in lines:
+                                                f.write(''.join(line))
+                                            f.write('\n')
+                                        return
+
+                    #if no match or no good output, append and leave
+                    if i == len(ICAO_array):
+                        if msg_array_true[3*i+2] != 5 or msg_array_true[3*i+2] != 6 or msg_array_true[3*i+2] != 7 or msg_array_true[3*i+2] != 8:
+                            msg_array_true.append(msg)
+                            msg_array_true.append(TC)
+                            msg_array_true.append(ICAO)
+
             else:
 
                 #if for some reason counter goes over reset
@@ -97,11 +126,13 @@ def DF17_decode(msg_in, counter_array, msg_array):
 
         #if no messages exist
         if counter_array[1] == 0:
+
             #add attributes
             msg_array_true.append(msg)
             msg_array_true.append(TC)
             msg_array_true.append(ICAO)
             counter_array[1] = 1
+
             return
         
         
@@ -109,27 +140,55 @@ def DF17_decode(msg_in, counter_array, msg_array):
             #if message exists
             if counter_array[1] == 1:
                
+                
                 #check if same ICAO address and TC
                 ICAO_array = msg_array_true[3::3]
+
+                
+                if len(ICAO_array) == 0:
+                    return
+
+                
                 #pull msgs for specific set based on icao array placement
                 for i in range(len(ICAO_array)):
+                    
                     if ICAO_array[i] == ICAO:
-                        if msg_array[3*i+2] == TC:
-                            out = decode_air_pos(msg_array_true[i*3+1], msg, bin(msg_array[3*i+2]), msg_array_true[3*i+3], ICAO)
-                            #delete old message
-                            del msg_array_true[i*3+1]
-                            del msg_array_true[3*i+1]
-                            del msg_array_true[3*i+1]
+                        if msg_array_true[3*i+2] == TC:
+                            out = decode_air_pos(msg_array_true[i*3+1], msg, bin(msg_array_true[3*i+2]), msg_array_true[3*i+3], ICAO)
+                                
+                            #if good output delete old message and append new
+                            if out != 'ERROR':
+                                del msg_array_true[i*3+1]
+                                del msg_array_true[3*i+1]
+                                del msg_array_true[3*i+1]
+                                msg_array_true.append(msg)
+                                msg_array_true.append(TC)
+                                msg_array_true.append(ICAO)
+                                counter_array[1] = 0
+
+                            #if good output print to terminal/ text file
+                                if out:
+                                    if out != 'ERROR':
+                                        lines = ['DF: ', str(parts[0]), ' | ICAO: ', str(ICAO), ' | Type Code: ', str(TC), ' | Msg: ', str(out)]
+                                        print(lines)
+                                        with open('output.txt', 'a') as f:
+                                            for line in lines:
+                                                f.write(''.join(line))
+                                            f.write('\n')
+                                        return
+                   
+                   #if no match or no good output, append and leave
+                    if i == len(ICAO_array) & msg_array_true[3*i+2] != TC:
+                        msg_array_true.append(msg)
+                        msg_array_true.append(TC)
+                        msg_array_true.append(ICAO)
+
                 
-                #always adds current message
-                msg_array_true.append(msg)
-                msg_array_true.append(TC)
-                msg_array_true.append(ICAO)
-                counter_array[1] = 0
             else:
                 #reset if counter goes over 1
                 counter_array[1] = 0
                 return
+
     #airborne velocities
     if TC == 19:
         out = decode_air_velo(msg, TC_bin)
@@ -152,21 +211,43 @@ def DF17_decode(msg_in, counter_array, msg_array):
                
                #checks if ICAO and TC the same and computes
                 ICAO_array = msg_array_true[3::3]
+
+                if len(ICAO_array) == 0:
+                    return
+
+
                 for i in range(len(ICAO_array)):
                     if ICAO_array[i] == ICAO:
-                        if msg_array[3*i+2] == TC:
-                            out = decode_air_pos(msg_array_true[i*3+1], msg, bin(msg_array[3*i+2]), msg_array_true[3*i+3], ICAO)
+                        if msg_array_true[3*i+2] == TC:
+                            out = decode_air_pos(msg_array_true[i*3+1], msg, bin(msg_array_true[3*i+2]), msg_array_true[3*i+3], ICAO)
                             
-                            #deletes old message
-                            del msg_array_true[i*3+1]
-                            del msg_array_true[3*i+1]
-                            del msg_array_true[3*i+1]
+                             #if good output delete old message and append new
+                            if out != 'ERROR':
+                                del msg_array_true[i*3+1]
+                                del msg_array_true[3*i+1]
+                                del msg_array_true[3*i+1]
+                                msg_array_true.append(msg)
+                                msg_array_true.append(TC)
+                                msg_array_true.append(ICAO)
+                                counter_array[1] = 0
+
+                            #if good output print to terminal/ text file
+                                if out:
+                                    if out != 'ERROR':
+                                        lines = ['DF: ', str(parts[0]), ' | ICAO: ', str(ICAO), ' | Type Code: ', str(TC), ' | Msg: ', str(out)]
+                                        print(lines)
+                                        with open('output.txt', 'a') as f:
+                                            for line in lines:
+                                                f.write(''.join(line))
+                                            f.write('\n')
+                                        return
+                        
+                    #if no match or no good output, append and leave
+                    if i == len(ICAO_array) & msg_array_true[3*i+2] != TC:
+                        msg_array_true.append(msg)
+                        msg_array_true.append(TC)
+                        msg_array_true.append(ICAO)
                 
-                #adds existing message
-                msg_array_true.append(msg)
-                msg_array_true.append(TC)
-                msg_array_true.append(ICAO)
-                counter_array[2] = 0
             else:
                 #if counter goes over return to zero
                 counter_array[2] = 0
@@ -184,26 +265,28 @@ def DF17_decode(msg_in, counter_array, msg_array):
     if TC == 31:
         print('Op status')
 
-    #print output to terminal
-    lines = ['DF: ', str(parts[0]), ' | ICAO: ', str(ICAO), ' | Type Code: ', str(TC), ' | Msg: ', str(out)]
-    print(lines)
+    #print output to terminal and external Text File for functions without ICAO or TC storage
 
-    #print and output table to external text file
-    with open('output.txt', 'a') as f:
-        for line in lines:
-            f.write(''.join(line))
-        f.write('\n')
+    if out:
+        if out != 'ERROR':
+            lines = ['DF: ', str(parts[0]), ' | ICAO: ', str(ICAO), ' | Type Code: ', str(TC), ' | Msg: ', str(out)]
+            print(lines)
+            with open('output.txt', 'a') as f:
+                for line in lines:
+                    f.write(''.join(line))
+        
+                f.write('\n')
+    
     out = ""
         
 
 # ---Takes 4096 long message from demod
-def decode_from_demod(demod_out, counter_array, msg_array_true):
+def decode_from_demod(demod_out, counter_array, msg_array_true, ICAO_array):
     
     #check if 0 messages 
     if demod_out[0] == '0':
         return
     else:
-
         demod_out = demod_out[1:]
         #split the different messages apart
         msg_array = demod_out.split('2')
@@ -212,34 +295,19 @@ def decode_from_demod(demod_out, counter_array, msg_array_true):
         #take the last message and take off the -1s at end
         last = msg_array[num_msg]
         msg_array[num_msg] = last.replace('-1', '')
+
+        print('processed')
+        print(msg_array)
         
         #decode each individual message
         for i in range(num_msg+1):
             if msg_array[i] != "":
-                DF17_decode(msg_array[i], counter_array, msg_array_true)
+                if msg_array[i] != '0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000':
+                    DF17_decode(msg_array[i], counter_array, msg_array_true, ICAO_array)
         
 
-            
 
-# --- Main Program ---
 
-#message from demod output
-#test_output = '210001101010010000100000011010110001000000010110011000011011100011100001100101100111000000101011101100000100110002100011010100100001000000110101100010000000101100110000110111000111000011001011001110000001010111011000001001100021000110101001000010000001101011000100000001011001100001101110001110000110010110011100000010101110110000010011000-1-1-1-1'
-#test_output = '2100011000100100001000001011101010011101010101011001000111000011100110011110010001100110101000000001000001011000121000110001001000010000010111010100111010100010100011010100110010001111111010111010111101101011000111000000101101-1-1-1-1-1'
 
-#test that includes surf pos, air ident, and air pos messages
-test_output = '610001101010010000100000011010110001000000010110011000011011100011100001100101100111000000101011101100000100110002100011010100100001000000110101100010000000101100110000110111000111000011001011001110000001010111011000001001100021000110101001000010000001101011000100000001011001100001101110001110000110010110011100000010101110110000010011000221000110001001000010000010111010100111010101010110010001110000111001100111100100011001101010000000010000010110001210001100010010000100000101110101001110101000101000110101001100100011111110101110101111011010110001110000001011012100011010100000001100010000111010101100011000011100000101101011010010000110010001010110000101000011000111010011121000110101000000011000100001110101011000110000111000011001000011010111001100010000010010011010010010101011010110-1-1-1-1-1'
 
-#indicates if specific message type exists
-counter_array = [0, 0, 0]
-
-#collection of prev messages by ICAO address and TC
-#storage order: msg, TC, and ICAO: indexes at 1 
-msg_array_true = ['']
-
-#clears output document
-with open('output.txt', 'w') as f:
-      f.write('')
-
-decode_from_demod(test_output, counter_array, msg_array_true)
 
