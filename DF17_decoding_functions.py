@@ -1,6 +1,6 @@
 #Decoding the different message types
 #contained within an ADS-B message.
-#Last update: 1/30/2023
+#Last update: 12/30/2022
 
 #Libraries
 import math
@@ -88,6 +88,8 @@ def decode_air_pos(msg1_in, msg2_in, TC_in, ICAO1, ICAO2):
     if parts1[4] == '0':
         if parts2[4] == '0':    #Error if both messages are even
             print('ERROR: Both air position messsages are even.')
+            print(parts1)
+            print(parts2)
             return
         parts_even = parts1
         parts_odd = parts2
@@ -95,6 +97,8 @@ def decode_air_pos(msg1_in, msg2_in, TC_in, ICAO1, ICAO2):
     if parts1[4] == '1':
         if parts2[4] == '1':    #Error if both messages are odd
             print('ERROR: Both air position messages are odd.')
+            print(parts1)
+            print(parts2)
             return
         parts_odd = parts1
         parts_even = parts2
