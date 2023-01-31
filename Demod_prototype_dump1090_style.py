@@ -136,7 +136,7 @@ for i in range(0,len(infile),block_size):
     
     messageBits = ''.join(str(messageBits_array))
 
-    decode_from_demod(messageBits, counter_array, msg_array_true, ICAO_array)
+    counter_array, msg_array_true, ICAO_array = decode_from_demod(messageBits, counter_array, msg_array_true, ICAO_array)
 
 
 endTime = time.time()
