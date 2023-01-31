@@ -1,6 +1,5 @@
 #decode single buffer from demod module
-#might eventually include crc correction later? idk
-#Last Update : 01/17/23
+#Last Update : 01/31/23
 
 #different libraries
 import numpy as np
@@ -20,7 +19,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array):
     msg_hex = hex(integer_msg)
     rem = pms.crc(msg_hex)
     if rem != 0:
-        return
+        return counter_array, msg_array_true, ICAO_array
 
     #split bin into diff message components based of Table 1.1
     indices = [0, 5, 8, 32, 37, 88, 112]
@@ -28,7 +27,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array):
 
     #check that DF = 17
     if parts[0] != '10001':
-        return
+        return counter_array, msg_array_true, ICAO_array
     
     #Capability Set
     cap = int(parts[1], 2)
@@ -61,7 +60,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array):
             msg_array_true.append(TC)
             msg_array_true.append(ICAO)
             counter_array[0] = 1
-            return
+            return counter_array, msg_array_true, ICAO_array
         
         
         else: 
@@ -74,7 +73,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array):
 
                 #double check ICAO exists
                 if len(ICAO_array) == 0:
-                    return
+                    return counter_array, msg_array_true, ICAO_array
 
                 for i in range(len(ICAO_array)):
                     if ICAO_array[i] == ICAO:
@@ -92,7 +91,6 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array):
                                 msg_array_true.append(msg)
                                 msg_array_true.append(TC)
                                 msg_array_true.append(ICAO)
-                                counter_array[1] = 0
 
                             #if good output print to terminal/ text file
                                 if out:
@@ -103,7 +101,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array):
                                             for line in lines:
                                                 f.write(''.join(line))
                                             f.write('\n')
-                                        return
+                                        return counter_array, msg_array_true, ICAO_array
 
                     #if no match or no good output, append and leave
                     if i == len(ICAO_array):
@@ -117,7 +115,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array):
                 #if for some reason counter goes over reset
                 #could add hard reset in future
                 counter_array[0] = 0
-                return
+                return counter_array, msg_array_true, ICAO_array
 
     #airborne position baro 
     if TC == 9 or TC == 10 or TC == 11 or TC == 12 or TC == 13 or TC == 14 or TC == 15 or TC == 16 or TC == 17 or TC == 18:
@@ -133,7 +131,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array):
             msg_array_true.append(ICAO)
             counter_array[1] = 1
 
-            return
+            return counter_array, msg_array_true, ICAO_array
         
         
         else: 
@@ -146,7 +144,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array):
 
                 
                 if len(ICAO_array) == 0:
-                    return
+                    return counter_array, msg_array_true, ICAO_array
 
                 
                 #pull msgs for specific set based on icao array placement
@@ -164,7 +162,6 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array):
                                 msg_array_true.append(msg)
                                 msg_array_true.append(TC)
                                 msg_array_true.append(ICAO)
-                                counter_array[1] = 0
 
                             #if good output print to terminal/ text file
                                 if out:
@@ -175,7 +172,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array):
                                             for line in lines:
                                                 f.write(''.join(line))
                                             f.write('\n')
-                                        return
+                                        return counter_array, msg_array_true, ICAO_array
                    
                    #if no match or no good output, append and leave
                     if i == len(ICAO_array) & msg_array_true[3*i+2] != TC:
@@ -187,7 +184,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array):
             else:
                 #reset if counter goes over 1
                 counter_array[1] = 0
-                return
+                return counter_array, msg_array_true, ICAO_array
 
     #airborne velocities
     if TC == 19:
@@ -202,7 +199,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array):
             msg_array_true.append(TC)
             msg_array_true.append(ICAO)
             counter_array[2] = 1
-            return
+            return counter_array, msg_array_true, ICAO_array
         
         
         else: 
@@ -213,7 +210,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array):
                 ICAO_array = msg_array_true[3::3]
 
                 if len(ICAO_array) == 0:
-                    return
+                    return counter_array, msg_array_true, ICAO_array
 
 
                 for i in range(len(ICAO_array)):
@@ -229,7 +226,6 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array):
                                 msg_array_true.append(msg)
                                 msg_array_true.append(TC)
                                 msg_array_true.append(ICAO)
-                                counter_array[1] = 0
 
                             #if good output print to terminal/ text file
                                 if out:
@@ -240,7 +236,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array):
                                             for line in lines:
                                                 f.write(''.join(line))
                                             f.write('\n')
-                                        return
+                                        return counter_array, msg_array_true, ICAO_array
                         
                     #if no match or no good output, append and leave
                     if i == len(ICAO_array) & msg_array_true[3*i+2] != TC:
@@ -278,6 +274,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array):
                 f.write('\n')
     
     out = ""
+    return counter_array, msg_array_true, ICAO_array
         
 
 # ---Takes 4096 long message from demod
@@ -285,7 +282,7 @@ def decode_from_demod(demod_out, counter_array, msg_array_true, ICAO_array):
     
     #check if 0 messages 
     if demod_out[0] == '0':
-        return
+        return counter_array, msg_array_true, ICAO_array
     else:
         demod_out = demod_out[1:]
         #split the different messages apart
@@ -296,18 +293,12 @@ def decode_from_demod(demod_out, counter_array, msg_array_true, ICAO_array):
         last = msg_array[num_msg]
         msg_array[num_msg] = last.replace('-1', '')
 
-        print('processed')
-        print(msg_array)
+        
         
         #decode each individual message
         for i in range(num_msg+1):
             if msg_array[i] != "":
                 if msg_array[i] != '0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000':
-                    DF17_decode(msg_array[i], counter_array, msg_array_true, ICAO_array)
+                    counter_array, msg_array_true, ICAO_array = DF17_decode(msg_array[i], counter_array, msg_array_true, ICAO_array)
         
-
-
-
-
-
-
+        return counter_array, msg_array_true, ICAO_array
