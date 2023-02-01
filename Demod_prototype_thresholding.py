@@ -3,7 +3,7 @@ import math
 from decode import decode_from_demod
 
 # Change these before running the code!
-input_file_loc = r"C:/Users/emssm/Downloads/CMH_airport_data_2_2MSPS"
+input_file_loc = r"C:/Users/emssm/Downloads/mode1S_GR.bin"
 debug_info = True # Outputs some extra info to the terminal
 debug_file = False # Outputs the contents of the output to the next file
 debug_file_loc = r"C:/Users/emssm/OneDrive/bits.txt" 
@@ -17,11 +17,12 @@ tuning_factor = 2.5 # used for calibration. Increase if false messages are detec
 
 # This function converts the raw SDR samples into the unprocessed SDR bitstream which then needs to be processed.
 # Returns them as a string.
-def getRawBits(sample_block):
+def getRawBits(sample_block, debug_info):
     noise_floor = sum(sample_block[0::10]) / math.floor(block_size/10) * tuning_factor # Averages every 10th sample (for speed) to find the noise floor
-    print(noise_floor)
+    if(debug_info):
+        print("The threshold is:", noise_floor)
     in0 = np.abs(sample_block)
-    in0 = np.where(in0 > noise_floor, 1, 0) # this thresholding solution will need to be replaced later
+    in0 = np.where(in0 > noise_floor, 1, 0)
 
     
 
@@ -34,13 +35,24 @@ def getRawBits(sample_block):
     return in0_str
 
 
-
+def processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_info):
+    if(debug_info):
+        print(len(messages), "messages found in block.")
+    for message in messages:
+        messageBits = "".join(str(x) for x in message)
+        if(debug_info):
+            print("Message processed, output to demod is: ", messageBits)
+        decode_from_demod(messageBits, counter_array, msg_array_true, ICAO_array)
+        
 
 
 
 
 # This function takes in the raw ADS-B bitstream (as a string) and returns the output as described in the ICD.
-def getADSBBits(rawBits):
+def getADSBBits(rawBits, debug_info):
+    if(debug_info):
+        print("Processing new block of", len(rawBits), "bits:")
+
     message_loc = rawBits.find("1010000101000000") # searches for the first preamble it can find
     
     
@@ -48,17 +60,15 @@ def getADSBBits(rawBits):
     # This results in a portion of messages being missed altogether. This will need to be improved for our final project.
 
 
-    #output = np.empty(block_size)
-    #output.fill('-1')
 
-    output = ['-1' for x in range(block_size)]
+    output = []
 
     if(message_loc != -1) & (message_loc + 240 < len(rawBits)): 
+
         message_start = message_loc + 16  # this is where the actual ADS-B data starts
         
-        #message = np.empty(112, dtype=int)
+        message = np.empty(112, dtype=int)
 
-        message = ['' for x in range(112)]
 
         for i in range (112):             # ADS-B messages are 112 bits long
 
@@ -66,28 +76,24 @@ def getADSBBits(rawBits):
             # each bit of data is represented by two raw binary data bits, so we extract them
             # and process them two at a time
             if(twoBits == "01"):
-                message[i] = '0'
+                message[i] = 0
             elif(twoBits == "10"):
-                message[i] = '1'
+                message[i] = 1
             elif(twoBits == "11"):
-                message[i] = '1'
+                message[i] = 1
             elif(twoBits == "00"):
-                message[i] = '0'
+                message[i] = 0
             else:
                 message[i] = '0'
             # "01" and "10" represent valid message data, the rest are error states. Error handling of some sort will need to be added here.
 
-        output[0] = '1'
-        output[1:113] = message
-        output[113] = '2'
+        output.append(message)
+    
 
-    else:
-        output[0] = '0'
     
 
 
-    if(debug_info):
-        print(len(rawBits), message_loc)   # prints some data that may be useful, more debugging can be added if needed
+
 
     if(debug_file):
         file = open(debug_file_loc, "a")
@@ -109,10 +115,10 @@ def getADSBBits(rawBits):
 # getMessages takes in an array of raw SDR samples and converts them into ADS-B messages following the format set out in the 
 # interface control document. Essentially this is what our GNURadio code did. It's now been split up into a couple 
 # smaller functions.
-def getMessages(sample_block):
+def getMessages(sample_block, debug_info):
     
-    rawBitStream = getRawBits(sample_block)
-    ADSBBits = getADSBBits(rawBitStream)
+    rawBitStream = getRawBits(sample_block, debug_info)
+    ADSBBits = getADSBBits(rawBitStream, debug_info)
     return ADSBBits
 
 
@@ -131,7 +137,7 @@ def getMessages(sample_block):
 infile = np.fromfile(input_file_loc, dtype=np.complex64) # Gets the data from the file as one huge array.
 
 if(debug_info):
-    print(len(infile))
+    print("Input file read, file is", len(infile), "samples long.")
 
 #from decoding functions
 counter_array = [0, 0, 0]
@@ -147,10 +153,10 @@ with open('bits.txt', 'w') as f:
 for i in range(0,len(infile),block_size):
     sample_block = infile[i:(i+block_size)] # The for loop breaks the file into manageable blocks which are then processed.
 
-    sample_block = np.abs(sample_block)
+    sample_block = np.abs(sample_block) 
 
-    messageBits_array = getMessages(sample_block) # Contains the message data as described in the ICD- decoding team, you guys process this data.
-    
-    messageBits = ''.join(messageBits_array)
+    messages = getMessages(sample_block, debug_info) # Contains an array containing the messages, each as a 112-bit vector.
 
-    counter_array, msg_array_true, ICAO_array = decode_from_demod(messageBits, counter_array, msg_array_true, ICAO_array)
+    processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_info)
+
+

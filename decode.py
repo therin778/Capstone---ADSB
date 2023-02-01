@@ -279,26 +279,5 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array):
 
 # ---Takes 4096 long message from demod
 def decode_from_demod(demod_out, counter_array, msg_array_true, ICAO_array):
-    
-    #check if 0 messages 
-    if demod_out[0] == '0':
-        return counter_array, msg_array_true, ICAO_array
-    else:
-        demod_out = demod_out[1:]
-        #split the different messages apart
-        msg_array = demod_out.split('2')
-        num_msg = len(msg_array) - 1
-
-        #take the last message and take off the -1s at end
-        last = msg_array[num_msg]
-        msg_array[num_msg] = last.replace('-1', '')
-
-        
-        
-        #decode each individual message
-        for i in range(num_msg+1):
-            if msg_array[i] != "":
-                if msg_array[i] != '0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000':
-                    counter_array, msg_array_true, ICAO_array = DF17_decode(msg_array[i], counter_array, msg_array_true, ICAO_array)
-        
-        return counter_array, msg_array_true, ICAO_array
+    if demod_out != '0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000':
+        DF17_decode(demod_out, counter_array, msg_array_true, ICAO_array)
