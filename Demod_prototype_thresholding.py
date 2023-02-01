@@ -1,10 +1,12 @@
 import numpy as np
 import math
+import time
 from decode import decode_from_demod
 
 # Change these before running the code!
 input_file_loc = r"C:/Users/emssm/Downloads/mode1S_GR.bin"
-debug_info = True # Outputs some extra info to the terminal
+debug_info = False # Outputs some extra info to the terminal
+debug_time = True  # Performs analysis of the program's operational speed
 debug_file = False # Outputs the contents of the output to the next file
 debug_file_loc = r"C:/Users/emssm/OneDrive/bits.txt" 
 
@@ -34,7 +36,8 @@ def getRawBits(sample_block, debug_info):
     
     return in0_str
 
-
+# This function takes in an array of 112-bit message vectors, converts them to strings, then passes each message
+# along to the decoding section of the code
 def processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_info):
     if(debug_info):
         print(len(messages), "messages found in block.")
@@ -134,6 +137,8 @@ def getMessages(sample_block, debug_info):
 # This part is the main code that should control the entire program. Essentially we're replacing the GNURadio interface with 
 # this Python code that reads data from a file (or an SDR, later on) and processes it.
 
+startTime = time.time()
+
 infile = np.fromfile(input_file_loc, dtype=np.complex64) # Gets the data from the file as one huge array.
 
 if(debug_info):
@@ -158,5 +163,11 @@ for i in range(0,len(infile),block_size):
     messages = getMessages(sample_block, debug_info) # Contains an array containing the messages, each as a 112-bit vector.
 
     processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_info)
+
+
+endTime = time.time()
+timeElapsed = endTime-startTime
+if(debug_time):
+    print(timeElapsed, "s taken, program is running at", len(infile) / timeElapsed / 2000000 * 100 , "% of necessary speed")
 
 
