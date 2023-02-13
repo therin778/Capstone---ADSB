@@ -1,5 +1,5 @@
 #decode single buffer from demod module
-#Last Update : 01/31/23
+#Last Update : 02/13/23
 
 #different libraries
 import numpy as np
@@ -19,6 +19,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array):
     msg_hex = hex(integer_msg)
     rem = pms.crc(msg_hex)
     if rem != 0:
+        print("ERROR: CRC Error")
         return counter_array, msg_array_true, ICAO_array
 
     #split bin into diff message components based of Table 1.1
@@ -27,6 +28,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array):
 
     #check that DF = 17
     if parts[0] != '10001':
+        print("ERROR: DF != 17")
         return counter_array, msg_array_true, ICAO_array
     
     #Capability Set
@@ -49,7 +51,6 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array):
         out = decode_iden(msg, TC_bin)
 
     #Surface Pos
-    #xtra message output? IDK man
     if TC == 5 or TC == 6 or TC == 7 or TC == 8:
 
         #see if another message of same type exists
@@ -73,6 +74,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array):
 
                 #double check ICAO exists
                 if len(ICAO_array) == 0:
+                    #Append message in this case?
                     return counter_array, msg_array_true, ICAO_array
 
                 for i in range(len(ICAO_array)):
@@ -279,5 +281,31 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array):
 
 # ---Takes 4096 long message from demod
 def decode_from_demod(demod_out, counter_array, msg_array_true, ICAO_array):
-    if demod_out != '0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000':
-        DF17_decode(demod_out, counter_array, msg_array_true, ICAO_array)
+    
+    #check if 0 messages 
+    if demod_out[0] == '0':
+        return counter_array, msg_array_true, ICAO_array
+    else:
+        demod_out = demod_out[1:]
+        #split the different messages apart
+        msg_array = demod_out.split('2')
+        num_msg = len(msg_array) - 1
+
+        #take the last message and take off the -1s at end
+        last = msg_array[num_msg]
+        msg_array[num_msg] = last.replace('-1', '')
+
+        
+        
+        #decode each individual message
+        for i in range(num_msg+1):
+            if msg_array[i] != "":
+                if msg_array[i] != '0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000':
+                    counter_array, msg_array_true, ICAO_array = DF17_decode(msg_array[i], counter_array, msg_array_true, ICAO_array)
+        
+        return counter_array, msg_array_true, ICAO_array
+        
+
+
+
+
