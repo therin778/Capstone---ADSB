@@ -1,6 +1,6 @@
 #Decoding the different message types
 #contained within an ADS-B message.
-#Last update: 12/30/2022
+#Last update: 2/13/2023
 
 #Libraries
 import math
@@ -69,7 +69,7 @@ def decode_air_pos(msg1_in, msg2_in, TC_in, ICAO1, ICAO2):
     airpos_out = ['SS', 'LAT', 'LONG', 'ALT', 'ALT_TYPE']
     if ICAO1 != ICAO2:  #Error if the 2 messages are from different aircraft
         print('ERROR: ICAOs of air position messages do not match.')
-        return
+        return 'ERROR'
     
     #Dividing the message data. Message structure: surveillance status (2 bits), single antenna flag (1),
     #altitude (12), time (1), even/odd (1), latitude (12), longitude (12).
@@ -90,7 +90,7 @@ def decode_air_pos(msg1_in, msg2_in, TC_in, ICAO1, ICAO2):
             print('ERROR: Both air position messsages are even.')
             print(parts1)
             print(parts2)
-            return
+            return 'ERROR'
         parts_even = parts1
         parts_odd = parts2
     
@@ -99,7 +99,7 @@ def decode_air_pos(msg1_in, msg2_in, TC_in, ICAO1, ICAO2):
             print('ERROR: Both air position messages are odd.')
             print(parts1)
             print(parts2)
-            return
+            return 'ERROR'
         parts_odd = parts1
         parts_even = parts2
     
@@ -184,7 +184,7 @@ def decode_sur_pos(msg1_in, msg2_in, ICAO1, ICAO2):
     surpos_out = ['GS', 'GT', 'LAT', 'LONG']
     if ICAO1 != ICAO2:  #Error if the 2 messages are from different aircraft
         print('ERROR: ICAOs of surface position messages do no match.')
-        return
+        return 'ERROR'
     #Dividing the message data. Message structure: ground speed (7 bits), ground track status (1),
     #ground track (7), time (1), even/odd (1), latitude (17), longitude (17).
     indices = [0, 7, 8, 15, 16, 17, 34, 51]
@@ -216,14 +216,14 @@ def decode_sur_pos(msg1_in, msg2_in, ICAO1, ICAO2):
     if parts1[4] == '0':
         if parts2[4] == '0':    #Error if both messages are even
             print('ERROR: Both surface position messages are even.')
-            return
+            return 'ERROR'
         parts_even = parts1
         parts_odd = parts2
     
     if parts1[4] == '1':
         if parts2[4] == '1':    #Error if both messages are odd
             print('ERROR: Both surface position messages are odd.')
-            return
+            return 'ERROR'
         parts_odd = parts1
         parts_even = parts2
 
