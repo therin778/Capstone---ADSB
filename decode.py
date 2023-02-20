@@ -1,5 +1,5 @@
 #decode single buffer from demod module
-#Last Update : 02/13/23
+#Last Update : 02/20/23
 
 #different libraries
 import numpy as np
@@ -281,7 +281,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array):
 
 # ---Takes 4096 long message from demod
  
-def decode_from_demod(demod_out, counter_array, msg_array_true, ICAO_array):
+def decode_from_demod(demod_out, counter_array, msg_array_true, ICAO_array, debug_info):
     if demod_out != '0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000':
         DF17_decode(demod_out, counter_array, msg_array_true, ICAO_array)
         
