@@ -1,6 +1,7 @@
 import numpy as np
 import time
 import rtlsdr
+import folium
 from decode import decode_from_demod
 
 
@@ -8,12 +9,21 @@ from decode import decode_from_demod
 
 # Change these before running the code!
 from Demod_prototype_loop_checking import getMessages # change this to which program you want to test
-run_from_file = False # If true run from file, if false run from SDR
-input_file_loc = r"./Data Files/mode1s_gr.bin"
+run_from_file = True # If true run from file, if false run from SDR
+input_file_loc = r"/Users/kategothberg/Capstone---ADSB/mode1s_GR.bin"
 debug_info = False # Outputs some extra info to the terminal
 debug_time = False  # Performs analysis of the program's operational speed
 debug_file = False # Outputs the contents of the output to the next file
-debug_file_loc = r"bits.txt" 
+debug_file_loc = r"/Users/kategothberg/Capstone---ADSB/bits.txt"  
+
+test_lat = 43.08488748841366 
+test_long = 15.163225446428571
+
+ohio_lat = 39.3292
+ohio_long = -82.1013
+
+map = folium.Map(location=[test_lat, test_long]) 
+map.save("disp_map.html")
 
 
 block_size = 4096 # the size of blocks of samples, currently 4096, may be increased if the program lags
@@ -27,7 +37,7 @@ delta_tuning = 0.5 # Used for calibration. Setting it too low will lead to false
 
 # This function takes in an array of 112-bit message vectors, converts them to strings, then passes each message
 # along to the decoding section of the code
-def processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_info):
+def processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_info, map):
 
     if(debug_info):
         print(len(messages), "messages found in block.")
@@ -38,7 +48,9 @@ def processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_i
         if(debug_info):
             print("Message processed, output to demod is: ", messageBits)
 
-        decode_from_demod(messageBits, counter_array, msg_array_true, ICAO_array, debug_info)
+        decode_from_demod(messageBits, counter_array, msg_array_true, ICAO_array, debug_info, map)
+
+        map.save("disp_map.html")
 
 
 
@@ -79,7 +91,7 @@ def main_file():
 
     messages = getMessages(sample_block, tuning_factor, delta_tuning, debug_info, debug_file, debug_file_loc) # Contains an array containing the messages, each as a 112-bit vector.
 
-    processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_info)
+    processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_info, map)
 
 
 
@@ -92,7 +104,7 @@ def main_file():
 
         messages = getMessages(sample_block, tuning_factor, delta_tuning, debug_info, debug_file, debug_file_loc) # Contains an array containing the messages, each as a 112-bit vector.
 
-        processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_info)
+        processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_info, map)
 
 
 
@@ -136,7 +148,7 @@ def main_sdr(sdr):
 
     messages = getMessages(sample_block, tuning_factor, delta_tuning, debug_info, debug_file, debug_file_loc) # Contains an array containing the messages, each as a 112-bit vector.
 
-    processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_info)
+    processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_info, map)
 
 
 
@@ -149,7 +161,7 @@ def main_sdr(sdr):
 
         messages = getMessages(sample_block, tuning_factor, delta_tuning, debug_info, debug_file, debug_file_loc) # Contains an array containing the messages, each as a 112-bit vector.
 
-        processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_info)
+        processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_info, map)
 
 
 
