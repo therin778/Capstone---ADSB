@@ -1,6 +1,6 @@
 #Decoding the different message types
 #contained within an ADS-B message.
-#Last update: 2/13/2023
+#Last update: 02/20/2023
 
 #Libraries
 import math
@@ -69,7 +69,7 @@ def decode_air_pos(msg1_in, msg2_in, TC_in, ICAO1, ICAO2):
     airpos_out = ['SS', 'LAT', 'LONG', 'ALT', 'ALT_TYPE']
     if ICAO1 != ICAO2:  #Error if the 2 messages are from different aircraft
         print('ERROR: ICAOs of air position messages do not match.')
-        return 'ERROR'
+        return
     
     #Dividing the message data. Message structure: surveillance status (2 bits), single antenna flag (1),
     #altitude (12), time (1), even/odd (1), latitude (12), longitude (12).
@@ -90,7 +90,7 @@ def decode_air_pos(msg1_in, msg2_in, TC_in, ICAO1, ICAO2):
             print('ERROR: Both air position messsages are even.')
             print(parts1)
             print(parts2)
-            return 'ERROR'
+            return
         parts_even = parts1
         parts_odd = parts2
     
@@ -99,7 +99,7 @@ def decode_air_pos(msg1_in, msg2_in, TC_in, ICAO1, ICAO2):
             print('ERROR: Both air position messages are odd.')
             print(parts1)
             print(parts2)
-            return 'ERROR'
+            return
         parts_odd = parts1
         parts_even = parts2
     
@@ -111,16 +111,32 @@ def decode_air_pos(msg1_in, msg2_in, TC_in, ICAO1, ICAO2):
     lat_cpr_odd = int(parts_odd[5], 2) / (2 ** 17)
     lat_index = math.floor((59 * lat_cpr_even) - (60 * lat_cpr_odd) + 0.5)
 
+    lat_even = d_lat_even * ((lat_index % 60) + lat_cpr_even)
+    lat_odd = d_lat_odd * ((lat_index % 59) + lat_cpr_odd)
+
     if parts_even[4] == '1':
-        lat = d_lat_even * ((lat_index % 60) + lat_cpr_even)
+        lat = lat_even
+        even_pos = True
     if parts_even[4] == '0' and parts_odd[4] == '0':
-       lat = d_lat_even * ((lat_index % 60) + lat_cpr_even)
+        lat = lat_even
+        even_pos = True
     if parts_even[4] == '0' and parts_odd[4] == '1':
-       lat = d_lat_odd * ((lat_index % 59) + lat_cpr_odd)
-    airpos_out[1] = lat  
+        lat = lat_odd
+        even_pos = False
+    airpos_out[1] = lat
 
     #Calculating longitude
-    NL = math.floor((2 * math.pi) / (math.acos(1 - (1 - math.cos(math.pi / (2 * Nz))) / (math.cos((math.pi * lat) / 180) ** 2))))
+    NL_even = math.floor((2 * math.pi) / (math.acos(1 - (1 - math.cos(math.pi / (2 * Nz))) / (math.cos((math.pi * lat_even) / 180) ** 2))))
+    NL_odd = math.floor((2 * math.pi) / (math.acos(1 - (1 - math.cos(math.pi / (2 * Nz))) / (math.cos((math.pi * lat_odd) / 180) ** 2))))
+    if NL_even != NL_odd:
+        print('ERROR: Messages from different zones, positional computation not possible.')
+        return
+    
+    if even_pos == True:
+        NL = NL_even
+    else:
+        NL = NL_odd
+
     n_even = max(NL, 1)
     n_odd = max(NL - 1, 1)
     d_long_even = 360 / n_even
@@ -184,7 +200,7 @@ def decode_sur_pos(msg1_in, msg2_in, ICAO1, ICAO2):
     surpos_out = ['GS', 'GT', 'LAT', 'LONG']
     if ICAO1 != ICAO2:  #Error if the 2 messages are from different aircraft
         print('ERROR: ICAOs of surface position messages do no match.')
-        return 'ERROR'
+        return
     #Dividing the message data. Message structure: ground speed (7 bits), ground track status (1),
     #ground track (7), time (1), even/odd (1), latitude (17), longitude (17).
     indices = [0, 7, 8, 15, 16, 17, 34, 51]
@@ -216,14 +232,14 @@ def decode_sur_pos(msg1_in, msg2_in, ICAO1, ICAO2):
     if parts1[4] == '0':
         if parts2[4] == '0':    #Error if both messages are even
             print('ERROR: Both surface position messages are even.')
-            return 'ERROR'
+            return
         parts_even = parts1
         parts_odd = parts2
     
     if parts1[4] == '1':
         if parts2[4] == '1':    #Error if both messages are odd
             print('ERROR: Both surface position messages are odd.')
-            return 'ERROR'
+            return
         parts_odd = parts1
         parts_even = parts2
 
@@ -235,12 +251,19 @@ def decode_sur_pos(msg1_in, msg2_in, ICAO1, ICAO2):
     lat_cpr_odd = int(parts_odd[5], 2) / (2 ** 17)
     lat_index = math.floor((59 * lat_cpr_even) - (60 * lat_cpr_odd) + 0.5)
 
-    if parts_even[4] == '1':    
-        lat = d_lat_even * ((lat_index % 60) + lat_cpr_even)
+    lat_even = d_lat_even * ((lat_index % 60) + lat_cpr_even)
+    lat_odd = d_lat_odd * ((lat_index % 59) + lat_cpr_odd)
+
+    if parts_even[4] == '1':
+        lat = lat_even
+        even_pos = True
     if parts_even[4] == '0' and parts_odd[4] == '0':
-       lat = d_lat_even * ((lat_index % 60) + lat_cpr_even)
+        lat = lat_even
+        even_pos = True
     if parts_even[4] == '0' and parts_odd[4] == '1':
-       lat = d_lat_odd * ((lat_index % 59) + lat_cpr_odd)
+        lat = lat_odd
+        even_pos = False
+
     lat1 = lat - 90
     delta = abs(lat - ref_lat)
     delta1 = abs(lat1 - ref_lat)
@@ -248,7 +271,17 @@ def decode_sur_pos(msg1_in, msg2_in, ICAO1, ICAO2):
     surpos_out[2] = lat
 
     #Decoding longitude
-    NL = math.floor((2 * math.pi) / (math.acos(1 - (1 - math.cos(math.pi / (2 * Nz))) / (math.cos((math.pi * lat) / 180) ** 2))))
+    NL_even = math.floor((2 * math.pi) / (math.acos(1 - (1 - math.cos(math.pi / (2 * Nz))) / (math.cos((math.pi * lat_even) / 180) ** 2))))
+    NL_odd = math.floor((2 * math.pi) / (math.acos(1 - (1 - math.cos(math.pi / (2 * Nz))) / (math.cos((math.pi * lat_odd) / 180) ** 2))))
+    if NL_even != NL_odd:
+        print('ERROR: Messages from different zones, positional computation not possible.')
+        return
+    
+    if even_pos == True:
+        NL = NL_even
+    else:
+        NL = NL_odd
+
     n_even = max(NL, 1)
     n_odd = max(NL - 1, 1)
     d_long_even = 90 / n_even
