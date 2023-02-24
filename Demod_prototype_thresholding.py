@@ -26,23 +26,21 @@ def getRawBits(sample_block, tuning_factor, debug_info):
 
 # This function takes in the raw ADS-B bitstream (as a string) and returns the output as described in the ICD.
 def getADSBBits(rawBits, debug_info, debug_file, debug_file_loc):
-    if(debug_info):
-        print("Processing new block of", len(rawBits), "bits:")
-
-    message_loc = rawBits.find("1010000101000000") # searches for the first preamble it can find
-    
-    
-    # This block will only execute on a single preamble, even if multiple are present in the sample block.
-    # This results in a portion of messages being missed altogether. This will need to be improved for our final project.
-
-
-
+   # if(debug_info):
+#    print("Processing new block of", len(rawBits), "bits:")
     output = []
-
-    if(message_loc != -1) & (message_loc + 240 < len(rawBits)): 
+    while True:
+        message_loc = rawBits.find("1010000101000000") # searches for the first preamble it can find
+    
+        # This block will only execute on a single preamble, even if multiple are present in the sample block.
+        # This results in a portion of messages being missed altogether. This will need to be improved for our final project.
+        
+        if message_loc == -1:
+            break
+        if message_loc + 240 >= len(rawBits):
+            break
 
         message_start = message_loc + 16  # this is where the actual ADS-B data starts
-        
         message = np.empty(112, dtype=int)
 
 
@@ -64,7 +62,7 @@ def getADSBBits(rawBits, debug_info, debug_file, debug_file_loc):
             # "01" and "10" represent valid message data, the rest are error states. Error handling of some sort will need to be added here.
 
         output.append(message)
-    
+        rawBits = rawBits[message_loc + 240:]
 
     
 

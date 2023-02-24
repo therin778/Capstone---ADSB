@@ -5,10 +5,10 @@ from decode import decode_from_demod
 
 
 
-
+ 
 # Change these before running the code!
 from Demod_prototype_thresholding import getMessages # change this to which program you want to test
-input_file_loc = r"C:/Users/emssm/OneDrive/Schoolwork/EE 4953- Capstone/Data Files/mode1s_GR.bin"
+input_file_loc = r"C:/Users/MyPC/Desktop/Capstone---ADSB/Data Files/mode1s_GR.bin"
 debug_info = True # Outputs some extra info to the terminal
 debug_time = True  # Performs analysis of the program's operational speed
 debug_file = False # Outputs the contents of the output to the next file
