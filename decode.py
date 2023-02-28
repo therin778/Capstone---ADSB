@@ -8,13 +8,80 @@ import pyModeS as pms
 import folium
 
 
+# This class will contain all the information for a single aircraft.
+# All planes are stored in the "aircraft" array. The functions below the 
+# plane_class are created to make updating the array easier.
+# Simply call the updateArray functions with the array, ID, and information to be added
+# and it will take care of the rest. 
+
+class plane_class:
+    def __init__(self, ID): # this happens whenever a new plane is discovered: all variables are blank by default
+        self.ID = ID
+        self.lat = []
+        self.long = []
+        self.alt = []
+        self.heading = []
+        self.vel = []
+
+    def updatePos(self, newLat, newLong, newAlt): # appends the new position of the plane to their respective arrays
+        self.lat.append(newLat)
+        self.long.append(newLong)
+        self.alt.append(newAlt)
+    
+    def updateHeading(self, newHeading): # updates heading 
+        self.heading.append(newHeading)
+
+    def updateVelocity(self, newVel): # updates velocity
+        self.vel.append(newVel)
+
+    def ID(self): return self.ID # these 6 functions just let you access the data inside the plane object
+    def lat(self): return self.lat
+    def long(self): return self.long
+    def heading(self): return self.heading
+    def vel(self): return self.vel
+    def alt(self): return self.alt
+
+def updateArrayPos(aircraft, newLat, newLong, newAlt, ID):
+    isPresent = False # stores whether or not the ID is located in aircraft
+
+    for plane in aircraft:
+        if plane.ID == ID: # if the plane is found, update it and end the loop immediately
+            plane.updatePos(newLat, newLong, newAlt)
+            isPresent = True
+            break
+    
+    if (not isPresent): # if the ID isn't found, create a new plane, update it, then add it to the array
+        plane = plane_class(ID)
+        plane.updatePos(newLat, newLong)
+        aircraft.append(plane)
+
+def updateArrayVel(aircraft, newVel, newHeading, ID):
+    isPresent = False 
+
+    for plane in aircraft:
+        if plane.ID == ID:
+            plane.updateHeading(newHeading)
+            plane.updateVelocity(newVel)
+            isPresent = True
+            break
+    
+    if (not isPresent):
+        plane = plane_class(ID)
+        plane.updateHeading(newHeading)
+        plane.updateVelocity(newVel)
+        aircraft.append(plane)
+
+
+
+
+
 
 # --- Function Definitions ---
 
 # --- Decodes DF-17 Message Type ---
-def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array, map):
+def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array, map, aircraft):
 
-
+    out = 0
     #CRC check within each message
     integer_msg = int(msg_in, 2)
     msg_hex = hex(integer_msg)
@@ -186,6 +253,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array, map):
                                         out_vect = out_str.split(",")
                                         out_lat = float(out_vect[1])
                                         out_long = float(out_vect[2])
+                                        updateArrayPos(aircraft, out[1], out[2], out[3], ICAO)
                                         folium.Marker(
                                             [out_lat, out_long], popup="<i>Athens</i>"
                                         ).add_to(map)
@@ -212,6 +280,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array, map):
     #airborne velocities
     if TC == 19:
         out = decode_air_velo(msg, TC_bin)
+        updateArrayVel(aircraft, out[5], out[6], ICAO)
 
     #airborne pos GNSS
     if TC == 20 or TC == 21 or TC == 22:
@@ -259,6 +328,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array, map):
                                         out_vect = out_str.split(",")
                                         out_lat = float(out_vect[1])
                                         out_long = float(out_vect[2])
+                                        updateArrayPos(aircraft, out_lat, out_long, ICAO)
 
                                         folium.Marker(
                                             [out_lat, out_long], popup="<i>Athens</i>"
@@ -312,6 +382,5 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array, map):
 
 # ---Takes 4096 long message from demod
  
-def decode_from_demod(demod_out, counter_array, msg_array_true, ICAO_array, demod_info, map):
-    if demod_out != '0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000':
-        DF17_decode(demod_out, counter_array, msg_array_true, ICAO_array, map)
+def decode_from_demod(demod_out, counter_array, msg_array_true, ICAO_array, demod_info, map, aircraft):
+    DF17_decode(demod_out, counter_array, msg_array_true, ICAO_array, map, aircraft)

@@ -2,26 +2,19 @@ import numpy as np
 import time
 import rtlsdr
 import folium
-from decode import decode_from_demod
+from decode import decode_from_demod, plane_class
 
 
 
  
 # Change these before running the code!
-<<<<<<< HEAD
-from Demod_prototype_thresholding import getMessages # change this to which program you want to test
-input_file_loc = r"C:/Users/MyPC/Desktop/Capstone---ADSB/Data Files/mode1s_GR.bin"
-debug_info = True # Outputs some extra info to the terminal
-debug_time = True  # Performs analysis of the program's operational speed
-=======
 from Demod_prototype_loop_checking import getMessages # change this to which program you want to test
 run_from_file = True # If true run from file, if false run from SDR
-input_file_loc = r"/Users/kategothberg/Capstone---ADSB/mode1s_GR.bin"
-debug_info = False # Outputs some extra info to the terminal
-debug_time = False  # Performs analysis of the program's operational speed
->>>>>>> 83db86b607a171ae17c904f17d781af20bc502ff
+input_file_loc = r"./Data Files/mode1s_GR.bin"
+debug_info = True # Outputs some extra info to the terminal
+debug_time = True  # Performs analysis of the program's operational speed
 debug_file = False # Outputs the contents of the output to the next file
-debug_file_loc = r"/Users/kategothberg/Capstone---ADSB/bits.txt"  
+debug_file_loc = r"./bits.txt"  
 
 test_lat = 43.08488748841366 
 test_long = 15.163225446428571
@@ -34,17 +27,17 @@ map.save("disp_map.html")
 
 
 block_size = 4096 # the size of blocks of samples, currently 4096, may be increased if the program lags
-tuning_factor = 1.5 # used for calibration. Increase if false messages are detected, decrease if real messages aren't detected.
+tuning_factor = 2.5 # used for calibration. Increase if false messages are detected, decrease if real messages aren't detected.
 # Note that this does different things with the different programs, but serves a similar purpose on both.
 
-delta_tuning = 0.5 # Used for calibration. Setting it too low will lead to false messages, setting it too high can miss real messages.
+delta_tuning = 0.6 # Used for calibration. Setting it too low will lead to false messages, setting it too high can miss real messages.
 # Only used on the loop checking style program.
 
 
 
 # This function takes in an array of 112-bit message vectors, converts them to strings, then passes each message
 # along to the decoding section of the code
-def processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_info, map):
+def processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_info, map, aircraft):
 
     if(debug_info):
         print(len(messages), "messages found in block.")
@@ -55,9 +48,9 @@ def processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_i
         if(debug_info):
             print("Message processed, output to demod is: ", messageBits)
 
-        decode_from_demod(messageBits, counter_array, msg_array_true, ICAO_array, debug_info, map)
+        decode_from_demod(messageBits, counter_array, msg_array_true, ICAO_array, debug_info, map, aircraft)
 
-        map.save("disp_map.html")
+    map.save("disp_map.html")
 
 
 
@@ -79,6 +72,7 @@ def main_file():
     counter_array = [0, 0, 0]
     msg_array_true = ['']
     ICAO_array = ['']
+    aircraft = []
 
     with open('output.txt', 'w') as f:
         f.write('')
@@ -98,7 +92,7 @@ def main_file():
 
     messages = getMessages(sample_block, tuning_factor, delta_tuning, debug_info, debug_file, debug_file_loc) # Contains an array containing the messages, each as a 112-bit vector.
 
-    processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_info, map)
+    processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_info, map, aircraft)
 
 
 
@@ -111,10 +105,17 @@ def main_file():
 
         messages = getMessages(sample_block, tuning_factor, delta_tuning, debug_info, debug_file, debug_file_loc) # Contains an array containing the messages, each as a 112-bit vector.
 
-        processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_info, map)
+        processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_info, map, aircraft)
 
-
-
+    if debug_info:
+        print("All aircraft received:")
+        for plane in aircraft:
+            print("\nID:", hex(int(plane.ID,2)))
+            print("All past latitudes:",  plane.lat)
+            print("All past longitudes:", plane.long)
+            print("All past altitudes:", plane.alt) 
+            print("All past headings:", plane.heading)
+            print("All past velocities:", plane.vel)
 
 
 
@@ -136,6 +137,7 @@ def main_sdr(sdr):
     counter_array = [0, 0, 0]
     msg_array_true = ['']
     ICAO_array = ['']
+    aircraft = []
 
     with open('output.txt', 'w') as f:
         f.write('')
@@ -155,7 +157,7 @@ def main_sdr(sdr):
 
     messages = getMessages(sample_block, tuning_factor, delta_tuning, debug_info, debug_file, debug_file_loc) # Contains an array containing the messages, each as a 112-bit vector.
 
-    processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_info, map)
+    processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_info, map, aircraft)
 
 
 
@@ -168,7 +170,7 @@ def main_sdr(sdr):
 
         messages = getMessages(sample_block, tuning_factor, delta_tuning, debug_info, debug_file, debug_file_loc) # Contains an array containing the messages, each as a 112-bit vector.
 
-        processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_info, map)
+        processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_info, map, aircraft)
 
 
 
