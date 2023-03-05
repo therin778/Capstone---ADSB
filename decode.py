@@ -1,5 +1,5 @@
 #decode single buffer from demod module
-#Last Update : 02/20/23
+#Last Update : 03/04/23
 
 #different libraries
 import numpy as np
@@ -79,7 +79,7 @@ def updateArrayVel(aircraft, newVel, newHeading, ID):
 # --- Function Definitions ---
 
 # --- Decodes DF-17 Message Type ---
-def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array, map, aircraft):
+def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array, aircraft):
 
     out = 0
     #CRC check within each message
@@ -88,7 +88,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array, map, aircraft
     rem = pms.crc(msg_hex)
     if rem != 0:
         print("ERROR: CRC Error")
-        return counter_array, msg_array_true, ICAO_array, map
+        return counter_array, msg_array_true, ICAO_array
 
     #split bin into diff message components based of Table 1.1
     indices = [0, 5, 8, 32, 37, 88, 112]
@@ -97,7 +97,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array, map, aircraft
     #check that DF = 17
     if parts[0] != '10001':
         print("ERROR: DF != 17")
-        return counter_array, msg_array_true, ICAO_array, map
+        return counter_array, msg_array_true, ICAO_array
     
     #Capability Set
     cap = int(parts[1], 2)
@@ -129,7 +129,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array, map, aircraft
             msg_array_true.append(TC)
             msg_array_true.append(ICAO)
             counter_array[0] = 1
-            return counter_array, msg_array_true, ICAO_array, map
+            return counter_array, msg_array_true, ICAO_array
         
         
         else: 
@@ -143,7 +143,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array, map, aircraft
                 #double check ICAO exists
                 if len(ICAO_array) == 0:
                     #Append message in this case?
-                    return counter_array, msg_array_true, ICAO_array, map
+                    return counter_array, msg_array_true, ICAO_array
 
                 for i in range(len(ICAO_array)):
                     if ICAO_array[i] == ICAO:
@@ -171,9 +171,6 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array, map, aircraft
                                         out_vect = out_str.split(",")
                                         out_lat = float(out_vect[2])
                                         out_long = float(out_vect[3])
-                                        folium.Marker(
-                                            [out_lat, out_long], popup="<i>Athens</i>"
-                                        ).add_to(map)
 
                                         print(lines)
                                         print("This is output msg:", str(out))
@@ -182,7 +179,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array, map, aircraft
                                                 f.write(''.join(line))
                                             f.write('\n')
                                             
-                                        return counter_array, msg_array_true, ICAO_array, map
+                                        return counter_array, msg_array_true, ICAO_array,
 
                     #if no match or no good output, append and leave
                     if i == len(ICAO_array):
@@ -196,7 +193,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array, map, aircraft
                 #if for some reason counter goes over reset
                 #could add hard reset in future
                 counter_array[0] = 0
-                return counter_array, msg_array_true, ICAO_array, map
+                return counter_array, msg_array_true, ICAO_array
 
     #airborne position baro 
     if TC == 9 or TC == 10 or TC == 11 or TC == 12 or TC == 13 or TC == 14 or TC == 15 or TC == 16 or TC == 17 or TC == 18:
@@ -212,7 +209,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array, map, aircraft
             msg_array_true.append(ICAO)
             counter_array[1] = 1
 
-            return counter_array, msg_array_true, ICAO_array, map
+            return counter_array, msg_array_true, ICAO_array
         
         
         else: 
@@ -225,7 +222,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array, map, aircraft
 
                 
                 if len(ICAO_array) == 0:
-                    return counter_array, msg_array_true, ICAO_array, map
+                    return counter_array, msg_array_true, ICAO_array
 
                 
                 #pull msgs for specific set based on icao array placement
@@ -254,16 +251,13 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array, map, aircraft
                                         out_lat = float(out_vect[1])
                                         out_long = float(out_vect[2])
                                         updateArrayPos(aircraft, out[1], out[2], out[3], ICAO)
-                                        folium.Marker(
-                                            [out_lat, out_long], popup="<i>Athens</i>"
-                                        ).add_to(map)
 
                                         with open('output.txt', 'a') as f:
                                             for line in lines:
                                                 f.write(''.join(line))
                                             f.write('\n')
 
-                                        return counter_array, msg_array_true, ICAO_array, map
+                                        return counter_array, msg_array_true, ICAO_array
                    
                    #if no match or no good output, append and leave
                     if i == len(ICAO_array) & msg_array_true[3*i+2] != TC:
@@ -275,7 +269,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array, map, aircraft
             else:
                 #reset if counter goes over 1
                 counter_array[1] = 0
-                return counter_array, msg_array_true, ICAO_array, map
+                return counter_array, msg_array_true, ICAO_array
 
     #airborne velocities
     if TC == 19:
@@ -291,7 +285,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array, map, aircraft
             msg_array_true.append(TC)
             msg_array_true.append(ICAO)
             counter_array[2] = 1
-            return counter_array, msg_array_true, ICAO_array, map
+            return counter_array, msg_array_true, ICAO_array
         
         
         else: 
@@ -302,7 +296,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array, map, aircraft
                 ICAO_array = msg_array_true[3::3]
 
                 if len(ICAO_array) == 0:
-                    return counter_array, msg_array_true, ICAO_array, map
+                    return counter_array, msg_array_true, ICAO_array
 
 
                 for i in range(len(ICAO_array)):
@@ -330,16 +324,12 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array, map, aircraft
                                         out_long = float(out_vect[2])
                                         updateArrayPos(aircraft, out_lat, out_long, ICAO)
 
-                                        folium.Marker(
-                                            [out_lat, out_long], popup="<i>Athens</i>"
-                                        ).add_to(map)
-
                                         with open('output.txt', 'a') as f:
                                             for line in lines:
                                                 f.write(''.join(line))
                                             f.write('\n')
 
-                                        return counter_array, msg_array_true, ICAO_array, map
+                                        return counter_array, msg_array_true, ICAO_array
                         
                     #if no match or no good output, append and leave
                     if i == len(ICAO_array) & msg_array_true[3*i+2] != TC:
@@ -377,10 +367,10 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array, map, aircraft
                 f.write('\n')
     
     out = ""
-    return counter_array, msg_array_true, ICAO_array, map
+    return counter_array, msg_array_true, ICAO_array
         
 
 # ---Takes 4096 long message from demod
  
-def decode_from_demod(demod_out, counter_array, msg_array_true, ICAO_array, demod_info, map, aircraft):
-    DF17_decode(demod_out, counter_array, msg_array_true, ICAO_array, map, aircraft)
+def decode_from_demod(demod_out, counter_array, msg_array_true, ICAO_array, demod_info, aircraft):
+    DF17_decode(demod_out, counter_array, msg_array_true, ICAO_array, aircraft)
