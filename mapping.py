@@ -1,6 +1,8 @@
 #mapping function for main
 #last update 03/04/23
 
+show_trail = True  #Set to True to show trail
+
 import folium
 
 def mapping(aircraft):
@@ -32,12 +34,25 @@ def mapping(aircraft):
             <p> pls work</p>
         </div>
         """
-
+        
+        coord_pair = []
+        map_finished = False
         for i in range(len(lat_list)):
 
             folium.Marker(
                 [float(lat_list[i]), float(long_list[i])], popup="<i>Athens</i>", icon=folium.DivIcon(html=html)
             ).add_to(map)
+
+            coord_pair.append([float(lat_list[i]), float(long_list[i])])
+            map_finished = True
+        
+        if map_finished == True:
+            if show_trail == True:
+                folium.PolyLine(locations = coord_pair,
+                        color='blue',
+                        weight=2,
+                        opacity=1,
+                        dash_array=[10, 5]).add_to(map)
         
 
 
