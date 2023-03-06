@@ -1,5 +1,5 @@
 #mapping function for main
-#last update 03/05/23
+#last update 03/06/23
 
 import folium
 
@@ -60,12 +60,12 @@ def mapping(aircraft):
             coord_pair.append([float(lat_list[i]), float(long_list[i])])
             map_finished = True
 
-        if map_finished == True:
-            if show_trail == True:
+        if(show_trail):
+            if(map_finished):
                 folium.PolyLine(locations = coord_pair,
-                        color='blue',
-                        weight=2,
-                        opacity=1,
-                        dash_array=[10, 5]).add_to(map)
+                    color='blue',
+                    weight=2,
+                    opacity=1,
+                    dash_array=[10, 5]).add_to(map)
 
     map.save("disp_map.html")
