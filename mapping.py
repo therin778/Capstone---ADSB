@@ -19,6 +19,20 @@ def mapping(aircraft):
 
     print(len(aircraft)) 
 
+    def popup_html(message, altitude, longitude, velocity):
+        return f"""
+            <div>
+                <svg height="200" width="200">
+                    <rect x="10" y="10" width="110" height="70"
+                    style="fill:white;stroke:black;stroke-width:2;opacity:0.5" />
+                    <text fill="black" font-size="12" font-family="Verdana" x="15" y="30">ICAO: {message}</text>
+                    <text fill="black" font-size="12" font-family="Verdana" x="15" y="40">Altitude: {altitude}</text>
+                    <text fill="black" font-size="12" font-family="Verdana" x="15" y="50">Longitude: {longitude:.3f}</text>
+                    <text fill="black" font-size="12" font-family="Verdana" x="15" y="60">Velocity: {velocity:.3f}</text>
+                </svg>
+            </div>
+        """
+
     for plane in aircraft:
 
         coord_pair = []
@@ -37,37 +51,18 @@ def mapping(aircraft):
 
             message = plane_list
 
-
             html=f"""
                 <div>
-                    <svg height="300" width="200">
-                        <rect x="10" y="10" width="180" height="120"
-                        style="fill:white;stroke:black;stroke-width:2;opacity:0.5" />
-                        <text fill="black" font-size="12" font-family="Verdana" x="15" y="30">ICAO: {message}</text>
-                        <text fill="black" font-size="12" font-family="Verdana" x="15" y="50">Altitude: {alt_list[i]}</text>
-                        <text fill="black" font-size="12" font-family="Verdana" x="15" y="70">Longitude: {long_list}</text>
-                        <text fill="black" font-size="12" font-family="Verdana" x="15" y="90">Velocity: {vel_list[i]}</text>
-                    </svg>
+                    <button onclick="show_popup(this)"><b>Athens</b></button>
                 </div>
             """
-            #folium.CircleMarker(
-            #    location   = [float(lat_list[i]), float(long_list[i])],
-            #    radius     = 50,
-            #    popup      = "Athens",
-            #    color      = "#3186cc",
-            #    fill       = True,
-            #    fill_color = "#3186cc",
-            #).add_to(map)
 
             folium.Marker(
-                [float(lat_list[i]), float(long_list[i])], icon=folium.DivIcon(html=html),
-                popup = folium.Popup(html=html, auto_close=False)
+                [float(lat_list[i]), float(long_list[i])], 
+                icon=folium.DivIcon(html=html),
+                popup=folium.Popup(popup_html(message, alt_list[i], long_list[i], vel_list[i]), max_width=200)
             ).add_to(map)
         
-            folium.Marker(
-                [float(lat_list[i]), float(long_list[i])], popup="<i>Athens</i>"
-            ).add_to(map)
-
             coord_pair.append([float(lat_list[i]), float(long_list[i])])
             map_finished = True
 
