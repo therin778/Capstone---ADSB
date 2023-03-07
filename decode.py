@@ -22,6 +22,7 @@ class plane_class:
         self.alt = []
         self.heading = []
         self.vel = []
+        self.tail = []
 
     def updatePos(self, newLat, newLong, newAlt): # appends the new position of the plane to their respective arrays
         self.lat.append(newLat)
@@ -34,12 +35,16 @@ class plane_class:
     def updateVelocity(self, newVel): # updates velocity
         self.vel.append(newVel)
 
+    def updateTail(self, newTail):
+        self.tail = newTail
+
     def ID(self): return self.ID # these 6 functions just let you access the data inside the plane object
     def lat(self): return self.lat
     def long(self): return self.long
     def heading(self): return self.heading
     def vel(self): return self.vel
     def alt(self): return self.alt
+    def tail(self): return self.tail
 
 def updateArrayPos(aircraft, newLat, newLong, newAlt, ID):
     isPresent = False # stores whether or not the ID is located in aircraft
@@ -52,7 +57,7 @@ def updateArrayPos(aircraft, newLat, newLong, newAlt, ID):
     
     if (not isPresent): # if the ID isn't found, create a new plane, update it, then add it to the array
         plane = plane_class(ID)
-        plane.updatePos(newLat, newLong)
+        plane.updatePos(newLat, newLong, newAlt)
         aircraft.append(plane)
 
 def updateArrayVel(aircraft, newVel, newHeading, ID):
@@ -71,10 +76,19 @@ def updateArrayVel(aircraft, newVel, newHeading, ID):
         plane.updateVelocity(newVel)
         aircraft.append(plane)
 
+def updateTail(aircraft, tailNumber, ID):
+    isPresent = False 
 
-
-
-
+    for plane in aircraft:
+        if plane.ID == ID:
+            plane.updateTail(tailNumber)
+            isPresent = True
+            break
+    
+    if (not isPresent):
+        plane = plane_class(ID)
+        plane.updateTail(tailNumber)
+        aircraft.append(plane)
 
 # --- Function Definitions ---
 
@@ -117,6 +131,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, ICAO_array, aircraft):
     #Aircraft Ident
     if TC == 1 or TC == 2 or TC == 3 or TC == 4:
         out = decode_iden(msg, TC_bin)
+        updateTail(aircraft, out[2], ICAO)
 
     #Surface Pos
     if TC == 5 or TC == 6 or TC == 7 or TC == 8:
