@@ -11,11 +11,11 @@ from mapping import mapping
 # Change these before running the code!
 from Demod_prototype_loop_checking import getMessages # change this to which program you want to test
 run_from_file = True # If true run from file, if false run from SDR
-input_file_loc = r"C:/Users/MyPC/Desktop/Capstone---ADSB/Data Files/mode1s_GR.bin"
-debug_info = True # Outputs some extra info to the terminal
+input_file_loc = r"./samples_short.bin"
+debug_info = False # Outputs some extra info to the terminal
 debug_time = True  # Performs analysis of the program's operational speed
 debug_file = False # Outputs the contents of the output to the next file
-debug_file_loc = r"/Users/MyPC/Desktop/Capstone---ADSB/bits.txt"
+debug_file_loc = r"./bits.txt"
 
   
 
@@ -45,7 +45,7 @@ def processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_i
 
         decode_from_demod(messageBits, counter_array, msg_array_true, ICAO_array, debug_info, aircraft)
 
-    mapping(aircraft)
+
     #map.save("disp_map.html")
 
 
@@ -103,18 +103,20 @@ def main_file():
 
         processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_info, aircraft)
 
-    if debug_info:
-        print("All aircraft received:")
-        for plane in aircraft:
-            print("\nID:", hex(int(plane.ID,2)))
-            print("All past latitudes:",  plane.lat)
-            print("All past longitudes:", plane.long)
-            print("All past altitudes:", plane.alt) 
-            print("All past headings:", plane.heading)
-            print("All past velocities:", plane.vel)
+    
+    print("All aircraft received:")
+    for plane in aircraft:
+        print("\nID:", hex(int(plane.ID,2)))
+        print("Tail number: ", plane.tail)
+        print("All past latitudes:",  plane.lat)
+        print("All past longitudes:", plane.long)
+        print("All past altitudes:", plane.alt) 
+        print("All past headings:", plane.heading)
+        print("All past velocities:", plane.vel)
 
 
 
+    mapping(aircraft)
     endTime = time.time()
     timeElapsed = endTime-startTime
     if(debug_time):
