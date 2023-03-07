@@ -11,11 +11,11 @@ from mapping import mapping
 # Change these before running the code!
 from Demod_prototype_loop_checking import getMessages # change this to which program you want to test
 run_from_file = True # If true run from file, if false run from SDR
-input_file_loc = r"./samples_short.bin"
+input_file_loc = r"/Users/kategothberg/Capstone---ADSB/samples_long.bin"
 debug_info = False # Outputs some extra info to the terminal
 debug_time = True  # Performs analysis of the program's operational speed
 debug_file = False # Outputs the contents of the output to the next file
-debug_file_loc = r"./bits.txt"
+debug_file_loc = r"/Users/kategothberg/Capstone---ADSB/bits.txt"
 
   
 
@@ -32,7 +32,7 @@ delta_tuning = 0.6 # Used for calibration. Setting it too low will lead to false
 
 # This function takes in an array of 112-bit message vectors, converts them to strings, then passes each message
 # along to the decoding section of the code
-def processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_info, aircraft):
+def processMessages(messages, counter_array, msg_array_true, TC_array, ICAO_array, debug_info, aircraft):
 
     if(debug_info):
         print(len(messages), "messages found in block.")
@@ -43,8 +43,9 @@ def processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_i
         if(debug_info):
             print("Message processed, output to demod is: ", messageBits)
 
-        decode_from_demod(messageBits, counter_array, msg_array_true, ICAO_array, debug_info, aircraft)
+        decode_from_demod(messageBits, counter_array, msg_array_true, TC_array, ICAO_array, debug_info, aircraft)
 
+        mapping(aircraft)
 
     #map.save("disp_map.html")
 
@@ -67,6 +68,7 @@ def main_file():
     # These three arrays are used internally by the decoding functions to store data.
     counter_array = [0, 0, 0]
     msg_array_true = ['']
+    TC_array = ['']
     ICAO_array = ['']
     aircraft = []
 
@@ -88,7 +90,7 @@ def main_file():
 
     messages = getMessages(sample_block, tuning_factor, delta_tuning, debug_info, debug_file, debug_file_loc) # Contains an array containing the messages, each as a 112-bit vector.
 
-    processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_info, aircraft)
+    processMessages(messages, counter_array, msg_array_true, TC_array, ICAO_array, debug_info, aircraft)
 
 
 
@@ -101,7 +103,7 @@ def main_file():
 
         messages = getMessages(sample_block, tuning_factor, delta_tuning, debug_info, debug_file, debug_file_loc) # Contains an array containing the messages, each as a 112-bit vector.
 
-        processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_info, aircraft)
+        processMessages(messages, counter_array, msg_array_true, TC_array, ICAO_array, debug_info, aircraft)
 
     
     print("All aircraft received:")
@@ -134,6 +136,7 @@ def main_sdr(sdr):
     # These three arrays are used internally by the decoding functions to store data.
     counter_array = [0, 0, 0]
     msg_array_true = ['']
+    TC_array = ['']
     ICAO_array = ['']
     aircraft = []
 
@@ -155,7 +158,7 @@ def main_sdr(sdr):
 
     messages = getMessages(sample_block, tuning_factor, delta_tuning, debug_info, debug_file, debug_file_loc) # Contains an array containing the messages, each as a 112-bit vector.
 
-    processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_info, aircraft)
+    processMessages(messages, counter_array, msg_array_true, TC_array, ICAO_array, debug_info, aircraft)
 
 
 
@@ -168,7 +171,7 @@ def main_sdr(sdr):
 
         messages = getMessages(sample_block, tuning_factor, delta_tuning, debug_info, debug_file, debug_file_loc) # Contains an array containing the messages, each as a 112-bit vector.
 
-        processMessages(messages, counter_array, msg_array_true, ICAO_array, debug_info, aircraft)
+        processMessages(messages, counter_array, msg_array_true, TC_array, ICAO_array, debug_info, aircraft)
 
 
 
