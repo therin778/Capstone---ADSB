@@ -1,6 +1,6 @@
 import numpy as np
 import time
-import rtlsdr
+#import rtlsdr
 import folium
 from decode import decode_from_demod, plane_class
 from mapping import mapping
@@ -11,13 +11,13 @@ from mapping import mapping
 # Change these before running the code!
 from Demod_prototype_loop_checking import getMessages # change this to which program you want to test
 run_from_file = True # If true run from file, if false run from SDR
-input_file_loc = r"/Users/kategothberg/Capstone---ADSB/mode1s_GR.bin"
+input_file_loc = r"C:/Users/MyPC/Desktop/Capstone---ADSB/Data Files/mode1s_GR.bin"
 debug_info = True # Outputs some extra info to the terminal
 debug_time = True  # Performs analysis of the program's operational speed
 debug_file = False # Outputs the contents of the output to the next file
-debug_file_loc = r"/Users/kategothberg/Capstone---ADSB/bits.txt"
+debug_file_loc = r"/Users/MyPC/Desktop/Capstone---ADSB/bits.txt"
 
-
+  
 
 
 

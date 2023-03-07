@@ -15,7 +15,7 @@ def mapping(aircraft):
     ohio_lat = 39.3292
     ohio_long = -82.1013
 
-    map = folium.Map(location=[test_lat, test_long], )
+    map = folium.Map(location=[test_lat, test_long])
 
     print(len(aircraft)) 
 
@@ -40,17 +40,28 @@ def mapping(aircraft):
 
             html=f"""
                 <div>
-            
-                    <svg height="200" width="200">
-                        <rect x="10" y="10" width="110" height="50"
+                    <svg height="300" width="200">
+                        <rect x="10" y="10" width="180" height="120"
                         style="fill:white;stroke:black;stroke-width:2;opacity:0.5" />
                         <text fill="black" font-size="12" font-family="Verdana" x="15" y="30">ICAO: {message}</text>
+                        <text fill="black" font-size="12" font-family="Verdana" x="15" y="50">Altitude: {alt_list[i]}</text>
+                        <text fill="black" font-size="12" font-family="Verdana" x="15" y="70">Longitude: {long_list}</text>
+                        <text fill="black" font-size="12" font-family="Verdana" x="15" y="90">Velocity: {vel_list[i]}</text>
                     </svg>
                 </div>
             """
+            #folium.CircleMarker(
+            #    location   = [float(lat_list[i]), float(long_list[i])],
+            #    radius     = 50,
+            #    popup      = "Athens",
+            #    color      = "#3186cc",
+            #    fill       = True,
+            #    fill_color = "#3186cc",
+            #).add_to(map)
 
             folium.Marker(
-                [float(lat_list[i]), float(long_list[i])], icon=folium.DivIcon(html=html)
+                [float(lat_list[i]), float(long_list[i])], icon=folium.DivIcon(html=html),
+                popup = folium.Popup(html=html, auto_close=False)
             ).add_to(map)
         
             folium.Marker(
