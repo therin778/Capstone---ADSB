@@ -1,6 +1,6 @@
 #Decoding the different message types
 #contained within an ADS-B message.
-#Last update: 02/20/2023
+#Last update: 03/20/2023
 
 #Libraries
 import math
@@ -66,6 +66,9 @@ def decode_iden(msg_in, TC_in):
 #This function decodes the airborne position message#
 #####################################################
 def decode_air_pos(msg1_in, msg2_in, TC_in, ICAO1, ICAO2):
+    athens_lat = 39.325882      #
+    athens_long = -82.10642     #coordinates for athens
+
     airpos_out = ['SS', 'LAT', 'LONG', 'ALT', 'ALT_TYPE']
     if ICAO1 != ICAO2:  #Error if the 2 messages are from different aircraft
         print('ERROR: ICAOs of air position messages do not match.')
@@ -179,6 +182,9 @@ def decode_air_pos(msg1_in, msg2_in, TC_in, ICAO1, ICAO2):
         alt = int(parts2[2], 2)
         airpos_out[3] = alt
         airpos_out[4] = 'GNSS'
+
+    if abs(airpos_out[1] - athens_lat) > 3 or abs(airpos_out[2] - athens_long) > 3:     #protection against the thing where the location would be in guatemala for some reason
+        print('ERROR: Invalid Position.')                                               #
 
     return airpos_out
 
@@ -418,30 +424,3 @@ def gray_to_bin(gray_in):
 ################################################################################
 #Main Program, ADS-B messages used are from the examples on https://mode-s.org/#
 ################################################################################
-msg_iden_bin = '000001011001100001101110001110000110010110011100000'
-type_code_iden = '100'
-
-msg_airpos1_bin = '000110000111000001011010110100100001100100010101100'
-msg_airpos2_bin = '000110000111000011001000011010111001100010000010010'
-type_code_airpos = '10010'
-ICAO1_bin = '010000000110001000011101'
-ICAO2_bin = '010000000110001000011101'
-
-msg_surpos1_bin = '010101010110010001110000111001100111100100011001101'
-msg_surpos2_bin = '010100010100011010100110010001111111010111010111101'
-
-msg_air_velo = '001010001000000100110010100000010000011100000010111'
-type_code_airvelo = '10011'
-
-iden = decode_iden(msg_iden_bin, type_code_iden)
-print('Identification Message:')
-print(iden)
-airpos = decode_air_pos(msg_airpos1_bin, msg_airpos2_bin, type_code_airpos, ICAO1_bin, ICAO2_bin)
-print('Air Position Message:')
-print(airpos)
-surpos = decode_sur_pos(msg_surpos1_bin, msg_surpos2_bin, ICAO1_bin, ICAO2_bin)
-print('Surface Position Message')
-print(surpos)
-airvelo = decode_air_velo(msg_air_velo, type_code_airvelo)
-print('Airborne Velocity Message')
-print(airvelo)
