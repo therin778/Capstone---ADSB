@@ -185,6 +185,7 @@ def decode_air_pos(msg1_in, msg2_in, TC_in, ICAO1, ICAO2):
 
     if abs(airpos_out[1] - athens_lat) > 3 or abs(airpos_out[2] - athens_long) > 3:     #protection against the thing where the location would be in guatemala for some reason
         print('ERROR: Invalid Position.')                                               #
+        return
 
     return airpos_out
 
