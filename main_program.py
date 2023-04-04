@@ -1,6 +1,6 @@
 import numpy as np
 import time
-#import rtlsdr
+import rtlsdr
 import folium
 from decode import decode_from_demod, plane_class
 from mapping import mapping
@@ -10,12 +10,12 @@ from mapping import mapping
  
 # Change these before running the code!
 from Demod_prototype_loop_checking import getMessages # change this to which program you want to test
-run_from_file = True # If true run from file, if false run from SDR
-input_file_loc = r"/Users/kategothberg/Capstone---ADSB/samples_long.bin"
+run_from_file = False # If true run from file, if false run from SDR
+input_file_loc = r"./samples_long.bin"
 debug_info = False # Outputs some extra info to the terminal
 debug_time = True  # Performs analysis of the program's operational speed
 debug_file = False # Outputs the contents of the output to the next file
-debug_file_loc = r"/Users/kategothberg/Capstone---ADSB/bits.txt"
+debug_file_loc = r"./bits.txt"
 
   
 
@@ -45,7 +45,7 @@ def processMessages(messages, counter_array, msg_array_true, TC_array, ICAO_arra
 
         decode_from_demod(messageBits, counter_array, msg_array_true, TC_array, ICAO_array, debug_info, aircraft)
 
-        mapping(aircraft)
+
 
     #map.save("disp_map.html")
 
@@ -128,7 +128,7 @@ def main_file():
 # The other main function, this one gets samples from an SDR.
 def main_sdr(sdr):
     startTime = time.time()
-
+    mappingTime = time.time()
 
     print("SDR successfully acquired.")
 
@@ -173,6 +173,10 @@ def main_sdr(sdr):
 
         processMessages(messages, counter_array, msg_array_true, TC_array, ICAO_array, debug_info, aircraft)
 
+        if(time.time() > mappingTime + 3): # map every 3 seconds for speed
+            mapping(aircraft)
+            mappingTime = time.time()
+            
 
 
 

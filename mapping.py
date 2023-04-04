@@ -15,7 +15,7 @@ def mapping(aircraft):
     ohio_lat = 39.3292
     ohio_long = -82.1013
 
-    map = folium.Map(location=[test_lat, test_long])
+    map = folium.Map(location=[ohio_lat, ohio_long])
 
     print(len(aircraft)) 
 
@@ -47,8 +47,15 @@ def mapping(aircraft):
         vel_list = plane.vel
         print("plane_list: ", plane_list)
 
+        # this is a hack to make the program stop crashing, i will fix this properly later
+        loop_len = 0
+        if len(lat_list) >= len(vel_list):
+            loop_len = len(vel_list)
+        else:
+            loop_len = len(lat_list)
+        
 
-        for i in range(len(lat_list)):
+        for i in range(loop_len):
 
             message = plane_list
 
