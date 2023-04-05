@@ -1,5 +1,5 @@
 #decode single buffer from demod module
-#Last Update : 03/18/23
+#Last Update : 04/05/23
 
 #different libraries
 import numpy as np
@@ -181,7 +181,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, TC_array, ICAO_array, air
                         if TC_array[i] == 5 or TC_array[i] == 6 or TC_array[i] == 7 or TC_array[i] == 8:
 
                             #decode surface position
-                            out = decode_sur_pos(msg_array_true[i*3+1], msg, msg_array_true[3*i+3], ICAO)
+                            out = decode_sur_pos(msg_array_true[i], msg, ICAO_array[i], ICAO)
                             
                             #if good output and not 2 evens or 2 odds, delete old message and append new so most current entry kept
                             if out != 'ERROR':
