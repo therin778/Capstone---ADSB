@@ -129,8 +129,13 @@ def decode_air_pos(msg1_in, msg2_in, TC_in, ICAO1, ICAO2):
     airpos_out[1] = lat
 
     #Calculating longitude
-    NL_even = math.floor((2 * math.pi) / (math.acos(1 - (1 - math.cos(math.pi / (2 * Nz))) / (math.cos((math.pi * lat_even) / 180) ** 2))))
-    NL_odd = math.floor((2 * math.pi) / (math.acos(1 - (1 - math.cos(math.pi / (2 * Nz))) / (math.cos((math.pi * lat_odd) / 180) ** 2))))
+    try:
+        NL_even = math.floor((2 * math.pi) / (math.acos(1 - (1 - math.cos(math.pi / (2 * Nz))) / (math.cos((math.pi * lat_even) / 180) ** 2))))
+        NL_odd = math.floor((2 * math.pi) / (math.acos(1 - (1 - math.cos(math.pi / (2 * Nz))) / (math.cos((math.pi * lat_odd) / 180) ** 2))))
+    except:
+        print("ERROR: Longitude could not be calculated")
+        return
+
     if NL_even != NL_odd:
         print('ERROR: Messages from different zones, positional computation not possible.')
         return

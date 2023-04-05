@@ -23,6 +23,7 @@ class plane_class:
         self.heading = []
         self.vel = []
         self.tail = []
+        self.type = []
 
     def updatePos(self, newLat, newLong, newAlt): # appends the new position of the plane to their respective arrays
         self.lat.append(newLat)
@@ -35,8 +36,9 @@ class plane_class:
     def updateVelocity(self, newVel): # updates velocity
         self.vel.append(newVel)
 
-    def updateTail(self, newTail):
+    def updateIden(self, newTail, newType):
         self.tail = newTail
+        self.type = newType
 
     def ID(self): return self.ID # these 6 functions just let you access the data inside the plane object
     def lat(self): return self.lat
@@ -80,8 +82,19 @@ def updateArrayVel(aircraft, newVel, newHeading, ID):
         plane.updateVelocity(newVel)
         aircraft.append(plane)
 
+def updateArrayIden(aircraft, newTail, newType, ID):
+    isPresent = False
 
-
+    for plane in aircraft:
+        if plane.ID == ID:
+            plane.updateIden(newTail, newType)
+            isPresent = True
+            break
+    
+    if(not isPresent):
+        plane = plane_class(ID)
+        plane.updateIden(newTail, newType)
+        aircraft.append(plane)
 
 
 
@@ -130,10 +143,12 @@ def DF17_decode(msg_in, counter_array, msg_array_true, TC_array, ICAO_array, air
 
         #decode identity message
         out = decode_iden(msg, TC_bin)
+        updateArrayIden(aircraft, out[2], out[1], ICAO)
 
     
     #TC: Surface Pos
     if TC == 5 or TC == 6 or TC == 7 or TC == 8:
+        return counter_array, msg_array_true, TC_array, ICAO_array
 
         #see if another message of same type exists, do different thing for each case
         

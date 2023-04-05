@@ -10,12 +10,13 @@ from mapping import mapping
  
 # Change these before running the code!
 from Demod_prototype_loop_checking import getMessages # change this to which program you want to test
-run_from_file = False # If true run from file, if false run from SDR
-input_file_loc = r"./samples_long.bin"
-debug_info = False # Outputs some extra info to the terminal
+run_from_file = True # If true run from file, if false run from SDR
+input_file_loc = r"./samples_flight_test_2.bin"
+debug_info = True # Outputs some extra info to the terminal
 debug_time = True  # Performs analysis of the program's operational speed
 debug_file = False # Outputs the contents of the output to the next file
 debug_file_loc = r"./bits.txt"
+aircraft_info_loc = r"./planes.txt" # When program stops, this stores all the data gathered on the planes
 
   
 
@@ -34,14 +35,14 @@ delta_tuning = 0.6 # Used for calibration. Setting it too low will lead to false
 # along to the decoding section of the code
 def processMessages(messages, counter_array, msg_array_true, TC_array, ICAO_array, debug_info, aircraft):
 
-    if(debug_info):
-        print(len(messages), "messages found in block.")
+    #if(debug_info):
+     #   print(len(messages), "messages found in block.")
 
     for message in messages:
         messageBits = "".join(str(x) for x in message)
 
-        if(debug_info):
-            print("Message processed, output to demod is: ", messageBits)
+        #if(debug_info):
+        #    print("Message processed, output to demod is: ", messageBits)
 
         decode_from_demod(messageBits, counter_array, msg_array_true, TC_array, ICAO_array, debug_info, aircraft)
 
@@ -110,11 +111,32 @@ def main_file():
     for plane in aircraft:
         print("\nID:", hex(int(plane.ID,2)))
         print("Tail number: ", plane.tail)
+        print("Type: ", plane.type)
         print("All past latitudes:",  plane.lat)
         print("All past longitudes:", plane.long)
         print("All past altitudes:", plane.alt) 
         print("All past headings:", plane.heading)
         print("All past velocities:", plane.vel)
+    
+    with open(aircraft_info_loc, 'w') as f:
+        for plane in aircraft:
+            f.writelines("\n\nID:")
+            f.writelines(hex(int(plane.ID,2)))
+            f.writelines("\nTail number: ")
+            f.writelines(str(plane.tail))
+            f.writelines("\nType: ")
+            f.writelines(str(plane.type))
+            f.writelines("\nAll past latitudes:")
+            f.writelines(str(plane.lat))
+            f.writelines("\nAll past longitudes:")
+            f.writelines(str(plane.long))
+            f.writelines("\nAll past altitudes:")
+            f.writelines(str(plane.alt))
+            f.writelines("\nAll past headings:")
+            f.writelines(str(plane.heading))
+            f.writelines("\nAll past velocities:")
+            f.writelines(str(plane.vel))
+
 
 
 
