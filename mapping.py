@@ -1,9 +1,11 @@
 #mapping function for main
-#last update 03/30/23
+#last update 04/07/23
 
 import folium
 
 show_trail = True  #Set to True to show trail
+all_icons = False  #Set to True to show all icons, False to show first and last
+icon_path = r"C:\Users\evanj\Desktop\Senior Design\Capstone---ADSB-main\Icons\Plane Icon.png" #Set to icon path
 
 def mapping(aircraft):
 
@@ -64,13 +66,21 @@ def mapping(aircraft):
                     <button onclick="show_popup(this)"><b>{plane_list}</b></button>
                 </div>
             """
-
-            folium.Marker(
-                [float(lat_list[i]), float(long_list[i])], 
-                icon=folium.DivIcon(html=html),
-                popup=folium.Popup(popup_html(message, lat_list[i], alt_list[i], long_list[i], vel_list[i]), max_width=200)
-            ).add_to(map)
+            if all_icons == True:
+                folium.Marker(
+                    [float(lat_list[i]), float(long_list[i])], 
+                    icon=folium.CustomIcon(icon_image=icon_path, icon_size=(25, 25)),
+                    popup=folium.Popup(popup_html(message, lat_list[i], alt_list[i], long_list[i], vel_list[i]), max_width=200)
+                ).add_to(map)
         
+            if all_icons == False:
+                if i == 0 or i == len(lat_list) - 1:
+                    folium.Marker(
+                    [float(lat_list[i]), float(long_list[i])], 
+                    icon=folium.CustomIcon(icon_image=icon_path, icon_size=(25, 25)),
+                    popup=folium.Popup(popup_html(message, lat_list[i], alt_list[i], long_list[i], vel_list[i]), max_width=200)
+                ).add_to(map)
+
             coord_pair.append([float(lat_list[i]), float(long_list[i])])
             map_finished = True
 
