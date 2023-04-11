@@ -1,12 +1,11 @@
 #mapping function for main
-#last update 04/07/23
+#last update 04/11/23
 
 import folium
 import random
 
 show_trail = True  #Set to True to show trail
-all_icons = False  #Set to True to show all icons, False to show first and last
-icon_path = r"./Icons/Plane Icon.png" #Set to icon path
+all_icons = True  #Set to True to show all icons, False to show first and last
 
 def mapping(aircraft):
 
@@ -63,6 +62,34 @@ def mapping(aircraft):
         
 
         for i in range(loop_len):
+
+            icon_path = r"./Icons/Plane Icon" #Set to icon path
+
+            if heading_list[len(heading_list)-1] >= -9 and heading_list[len(heading_list)-1] <= 9: icon_path += " 0.png"
+
+            if heading_list[len(heading_list)-1] > 9 and heading_list[len(heading_list)-1] <= 27: icon_path += " 18.png"
+            if heading_list[len(heading_list)-1] > 27 and heading_list[len(heading_list)-1] <= 45: icon_path += " 36.png"
+            if heading_list[len(heading_list)-1] > 45 and heading_list[len(heading_list)-1] <= 63: icon_path += " 54.png"
+            if heading_list[len(heading_list)-1] > 63 and heading_list[len(heading_list)-1] <= 81: icon_path += " 72.png"
+            if heading_list[len(heading_list)-1] > 81 and heading_list[len(heading_list)-1] <= 99: icon_path += " 90.png"
+            if heading_list[len(heading_list)-1] > 99 and heading_list[len(heading_list)-1] <= 117: icon_path += " 108.png"
+            if heading_list[len(heading_list)-1] > 117 and heading_list[len(heading_list)-1] <= 135: icon_path += " 126.png"
+            if heading_list[len(heading_list)-1] > 135 and heading_list[len(heading_list)-1] <= 153: icon_path += " 144.png"
+            if heading_list[len(heading_list)-1] > 153 and heading_list[len(heading_list)-1] <= 171: icon_path += " 162.png"
+
+            if heading_list[len(heading_list)-1] < -9 and heading_list[len(heading_list)-1] >= -27: icon_path += " 18.png"
+            if heading_list[len(heading_list)-1] < -27 and heading_list[len(heading_list)-1] >= -45: icon_path += " 36.png"
+            if heading_list[len(heading_list)-1] < -45 and heading_list[len(heading_list)-1] >= -63: icon_path += " 54.png"
+            if heading_list[len(heading_list)-1] < -63 and heading_list[len(heading_list)-1] >= -81: icon_path += " 72.png"
+            if heading_list[len(heading_list)-1] < -81 and heading_list[len(heading_list)-1] >= -99: icon_path += " 90.png"
+            if heading_list[len(heading_list)-1] < -99 and heading_list[len(heading_list)-1] >= -117: icon_path += " 108.png"
+            if heading_list[len(heading_list)-1] < -117 and heading_list[len(heading_list)-1] >= -135: icon_path += " 126.png"
+            if heading_list[len(heading_list)-1] < -135 and heading_list[len(heading_list)-1] >= -153: icon_path += " 144.png"
+            if heading_list[len(heading_list)-1] < -153 and heading_list[len(heading_list)-1] >= -171: icon_path += " 162.png"
+
+            if heading_list[len(heading_list)-1] > 171 or heading_list[len(heading_list)-1] < -171: icon_path += " 180.png"
+
+            if not heading_list: icon_path += " 0.png"
 
             message = plane_list
 
