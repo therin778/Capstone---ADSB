@@ -1,5 +1,5 @@
 #decode single buffer from demod module
-#Last Update : 04/05/23
+#Last Update : 03/18/23
 
 #different libraries
 import numpy as np
@@ -22,8 +22,8 @@ class plane_class:
         self.alt = []
         self.heading = []
         self.vel = []
-        self.tail = []
-        self.type = []
+        self.tail = ""
+        self.type = ""
 
     def updatePos(self, newLat, newLong, newAlt): # appends the new position of the plane to their respective arrays
         self.lat.append(newLat)
@@ -181,7 +181,7 @@ def DF17_decode(msg_in, counter_array, msg_array_true, TC_array, ICAO_array, air
                         if TC_array[i] == 5 or TC_array[i] == 6 or TC_array[i] == 7 or TC_array[i] == 8:
 
                             #decode surface position
-                            out = decode_sur_pos(msg_array_true[i], msg, ICAO_array[i], ICAO)
+                            out = decode_sur_pos(msg_array_true[i*3+1], msg, msg_array_true[3*i+3], ICAO)
                             
                             #if good output and not 2 evens or 2 odds, delete old message and append new so most current entry kept
                             if out != 'ERROR':
@@ -414,4 +414,5 @@ def DF17_decode(msg_in, counter_array, msg_array_true, TC_array, ICAO_array, air
 # ---Takes 4096 long message from demod
  
 def decode_from_demod(demod_out, counter_array, msg_array_true, TC_array, ICAO_array, demod_info, aircraft):
-    DF17_decode(demod_out, counter_array, msg_array_true, TC_array, ICAO_array, aircraft)
+    if(demod_out != "0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"):
+        DF17_decode(demod_out, counter_array, msg_array_true, TC_array, ICAO_array, aircraft)

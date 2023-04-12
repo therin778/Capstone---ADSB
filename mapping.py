@@ -24,16 +24,14 @@ def mapping(aircraft):
     def popup_html(ICAO, tail, latitude, altitude, longitude, velocity, heading):
         return f"""
             <div>
-                <svg height="300" width="300">
-                    <rect x="10" y="10" width="200" height="160"
-                    style="fill:white;stroke:black;stroke-width:2;opacity:0.5" />
-                    <text fill="black" font-size="12" font-family="Verdana" x="15" y="30">ICAO: {ICAO}</text>
-                    <text fill="black" font-size="12" font-family="Verdana" x="15" y="40">Tail number: {tail}</text>
-                    <text fill="black" font-size="12" font-family="Verdana" x="15" y="50">Latitude: {latitude:.4f}</text>
-                    <text fill="black" font-size="12" font-family="Verdana" x="15" y="60">Longitude: {longitude:.4f}</text>
-                    <text fill="black" font-size="12" font-family="Verdana" x="15" y="70">Altitude: {altitude:.4f}</text>
-                    <text fill="black" font-size="12" font-family="Verdana" x="15" y="80">Velocity: {velocity:.4f}</text>
-                    <text fill="black" font-size="12" font-family="Verdana" x="15" y="90">Heading: {heading:.4f}</text>
+                <svg height="75" width="150">
+                    <text fill="black" font-size="12" font-family="Verdana" x="0" y="10">ICAO: {ICAO}</text>
+                    <text fill="black" font-size="12" font-family="Verdana" x="0" y="20">Tail number: {tail}</text>
+                    <text fill="black" font-size="12" font-family="Verdana" x="0" y="30">Latitude: {latitude:.4f}</text>
+                    <text fill="black" font-size="12" font-family="Verdana" x="0" y="40">Longitude: {longitude:.4f}</text>
+                    <text fill="black" font-size="12" font-family="Verdana" x="0" y="50">Altitude: {altitude:.4f}</text>
+                    <text fill="black" font-size="12" font-family="Verdana" x="0" y="60">Velocity: {velocity:.4f}</text>
+                    <text fill="black" font-size="12" font-family="Verdana" x="0" y="70">Heading: {heading:.4f}</text>
                 </svg>
             </div>
         """
@@ -119,7 +117,6 @@ def mapping(aircraft):
         if(show_trail):
             if(map_finished):
                 color = '#' + str(hex(random.randint(1,16777216)))[2:] # looks weird, but it just generates a random hex color code
-                print(color)
                 folium.PolyLine(locations = coord_pair,
                     color=color,
                     weight=2,
