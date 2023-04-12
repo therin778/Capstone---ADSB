@@ -5,7 +5,7 @@ import folium
 import random
 
 show_trail = True  #Set to True to show trail
-all_icons = True  #Set to True to show all icons, False to show first and last
+all_icons = False  #Set to True to show all icons, False to show first and last
 
 def mapping(aircraft):
 
@@ -24,14 +24,14 @@ def mapping(aircraft):
     def popup_html(ICAO, tail, latitude, altitude, longitude, velocity, heading):
         return f"""
             <div>
-                <svg height="75" width="150">
-                    <text fill="black" font-size="12" font-family="Verdana" x="0" y="10">ICAO: {ICAO}</text>
-                    <text fill="black" font-size="12" font-family="Verdana" x="0" y="20">Tail number: {tail}</text>
-                    <text fill="black" font-size="12" font-family="Verdana" x="0" y="30">Latitude: {latitude:.4f}</text>
-                    <text fill="black" font-size="12" font-family="Verdana" x="0" y="40">Longitude: {longitude:.4f}</text>
-                    <text fill="black" font-size="12" font-family="Verdana" x="0" y="50">Altitude: {altitude:.4f}</text>
-                    <text fill="black" font-size="12" font-family="Verdana" x="0" y="60">Velocity: {velocity:.4f}</text>
-                    <text fill="black" font-size="12" font-family="Verdana" x="0" y="70">Heading: {heading:.4f}</text>
+                <svg height="80" width="150">
+                    <text fill="black" font-size="12" font-family="Verdana" x="0" y="10">ICAO: {ICAO[2:]}</text>
+                    <text fill="black" font-size="12" font-family="Verdana" x="0" y="21">Tail number: {tail.replace("_", "")}</text>
+                    <text fill="black" font-size="12" font-family="Verdana" x="0" y="32">Latitude: {latitude:.5f}°</text>
+                    <text fill="black" font-size="12" font-family="Verdana" x="0" y="43">Longitude: {longitude:.5f}°</text>
+                    <text fill="black" font-size="12" font-family="Verdana" x="0" y="54">Altitude: {altitude:.0f} ft.</text>
+                    <text fill="black" font-size="12" font-family="Verdana" x="0" y="65">Velocity: {velocity:.1f} kts</text>
+                    <text fill="black" font-size="12" font-family="Verdana" x="0" y="76">Heading: {heading:.1f}°</text>
                 </svg>
             </div>
         """
